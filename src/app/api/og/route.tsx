@@ -9,10 +9,16 @@ export async function GET(req: NextRequest) {
   const tour = searchParams.get('tour') || 'Tour';
   const leg = searchParams.get('leg') || '';
 
-  // Load N27 Bold font
-  const fontData = await fetch(
-    new URL('../../../../public/brand/N27-Bold.otf', import.meta.url)
-  ).then(res => res.arrayBuffer());
+  // Load N27 Bold font + CCD wordmark
+  const [fontData, logoData] = await Promise.all([
+    fetch(
+      new URL('../../../../public/brand/N27-Bold.otf', import.meta.url)
+    ).then(res => res.arrayBuffer()),
+    fetch(
+      new URL('../../../../public/brand/CC-LOGO-2024-WHITE.png', import.meta.url)
+    ).then(res => res.arrayBuffer()),
+  ]);
+  const logoBase64 = `data:image/png;base64,${Buffer.from(logoData).toString('base64')}`;
 
   return new ImageResponse(
     (
@@ -74,16 +80,13 @@ export async function GET(req: NextRequest) {
           >
             MEDIA FLIGHT
           </div>
-          <div
+          <img
+            src={logoBase64}
+            height={28}
             style={{
-              fontSize: 12,
-              color: '#666',
-              letterSpacing: '0.4em',
-              textTransform: 'uppercase' as const,
+              opacity: 0.7,
             }}
-          >
-            CROWD CONTROL DIGITAL
-          </div>
+          />
         </div>
 
         {/* Center: Artist + Tour */}
@@ -105,7 +108,7 @@ export async function GET(req: NextRequest) {
               marginBottom: '16px',
             }}
           >
-            {artist}
+            {artist.toUpperCase()}
           </div>
           <div
             style={{
