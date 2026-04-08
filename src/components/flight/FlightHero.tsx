@@ -59,7 +59,7 @@ export function FlightHero({ data }: FlightHeroProps) {
           src={data.images.hero}
           alt={`${data.artist} ${data.tourName}`}
           fill
-          className="object-cover object-center blur-[6px] scale-[1.05]"
+          className="object-cover object-center blur-[16px] scale-[1.1]"
           priority
           quality={90}
         />
