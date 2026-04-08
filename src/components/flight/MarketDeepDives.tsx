@@ -137,31 +137,40 @@ function MarketDeepDiveCard({
       {/* Header — always visible */}
       <button
         onClick={onToggle}
-        className="w-full text-left p-6 hover:bg-surface-100/40 transition-all focus:outline-none"
+        className="w-full text-left p-4 sm:p-6 hover:bg-surface-100/40 transition-all focus:outline-none"
       >
-        <div className="flex items-start justify-between gap-6">
+        {/* Mobile: stacked layout */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
           {/* Left: city + venue + meta */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-              <h3 className="font-heading text-xl font-bold text-text-primary truncate">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-text-primary">
                 {market.city}
               </h3>
               <span className="text-text-muted text-sm">·</span>
-              <span className="text-sm text-text-secondary font-body">{market.country}</span>
+              <span className="text-xs sm:text-sm text-text-secondary font-body">{market.country}</span>
+              {/* Chevron on mobile — right side of city row */}
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-text-muted text-xs sm:hidden ml-auto"
+              >
+                ▼
+              </motion.div>
             </div>
-            <p className="text-sm text-text-muted font-body">{market.venue}</p>
+            <p className="text-xs sm:text-sm text-text-muted font-body truncate">{market.venue}</p>
           </div>
 
-          {/* Right: sell pct + status */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <div className="text-right">
-              <p className="font-heading text-2xl font-bold text-text-primary leading-none">
+          {/* Right: sell pct + status + chevron */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <div className="text-left sm:text-right">
+              <p className="font-heading text-xl sm:text-2xl font-bold text-text-primary leading-none">
                 {formatPct(market.pctSold)}
               </p>
               <p className="text-[11px] text-text-muted font-body mt-0.5">sold</p>
             </div>
             <span
-              className="text-[11px] font-semibold tracking-[0.08em] uppercase rounded-md px-3 py-1.5 border"
+              className="text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] uppercase rounded-md px-2 sm:px-3 py-1 sm:py-1.5 border"
               style={{
                 color: accentColor,
                 borderColor: `${accentColor}44`,
@@ -173,7 +182,7 @@ function MarketDeepDiveCard({
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
-              className="text-text-muted text-sm"
+              className="text-text-muted text-sm hidden sm:block"
             >
               ▼
             </motion.div>
@@ -215,7 +224,7 @@ function MarketDeepDiveCard({
             className="overflow-hidden"
           >
             <div className="border-t border-surface-200 bg-surface-100/20">
-              <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Left: Velocity chart */}
                 <div>
                   <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3 font-medium">
