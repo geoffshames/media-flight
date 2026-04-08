@@ -13,8 +13,8 @@ const config: Config = {
           DEFAULT: '#0A0A0A',
           50: '#111111',
           100: '#1A1A1A',
-          200: '#222222',
-          300: '#2A2A2A',
+          200: '#2A2A2A',
+          300: '#333333',
         },
         accent: {
           DEFAULT: '#FD3737',
@@ -23,8 +23,8 @@ const config: Config = {
         },
         text: {
           primary: '#FAFAFA',
-          secondary: '#D4D4D8',
-          muted: '#9CA3AF',
+          secondary: '#E4E4E7',
+          muted: '#D4D4D8',
         },
         tier: {
           green: '#00E676',

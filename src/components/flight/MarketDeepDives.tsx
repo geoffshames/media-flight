@@ -225,8 +225,8 @@ function MarketDeepDiveCard({
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={velocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
-                        <XAxis dataKey="name" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-                        <YAxis stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                        <XAxis dataKey="name" stroke="#D4D4D8" tick={{ fontSize: 11, fill: '#D4D4D8' }} />
+                        <YAxis stroke="#D4D4D8" tick={{ fontSize: 11, fill: '#D4D4D8' }} />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: '#1A1A1A',

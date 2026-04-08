@@ -168,16 +168,16 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
             <XAxis
               dataKey="date"
-              stroke="#71717A"
-              tick={{ fontSize: 12, fill: '#71717A' }}
+              stroke="#D4D4D8"
+              tick={{ fontSize: 12, fill: '#D4D4D8' }}
               tickFormatter={(date) => {
                 const d = new Date(date + 'T00:00:00');
                 return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
               }}
             />
             <YAxis
-              stroke="#71717A"
-              tick={{ fontSize: 12, fill: '#71717A' }}
+              stroke="#D4D4D8"
+              tick={{ fontSize: 12, fill: '#D4D4D8' }}
               domain={[0, 100]}
               tickFormatter={(v) => `${v}%`}
             />
@@ -197,7 +197,7 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
               y={100}
               stroke="#333333"
               strokeDasharray="5 5"
-              label={{ value: '100%', fill: '#71717A', fontSize: 11, position: 'right' }}
+              label={{ value: '100%', fill: '#D4D4D8', fontSize: 11, position: 'right' }}
             />
 
             {markets

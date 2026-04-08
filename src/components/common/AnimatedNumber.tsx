@@ -41,7 +41,7 @@ export function AnimatedNumber({
       transition={{ duration: 0.5 }}
       className={className}
     >
-      {format(displayed)}
+      {format(Math.round(displayed * 10) / 10)}
     </motion.span>
   );
 }
