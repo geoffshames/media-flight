@@ -31,7 +31,7 @@ export function FlightHero({ data }: FlightHeroProps) {
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={stagger}
       className="relative min-h-screen w-full overflow-hidden bg-surface pt-24 px-4 sm:px-6 lg:px-8"

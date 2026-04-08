@@ -36,7 +36,7 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={stagger}
       className="space-y-6"

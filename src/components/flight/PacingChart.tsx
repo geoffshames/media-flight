@@ -133,7 +133,7 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={fadeUp}
       className="space-y-5"

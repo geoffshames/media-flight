@@ -25,7 +25,7 @@ const sectionHeaderVariants = {
 function SectionHeader({ number, title }: { number: string; title: string }) {
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={sectionHeaderVariants}
       className="mb-8"

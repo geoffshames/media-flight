@@ -63,7 +63,7 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={fadeUp}
       className="space-y-4"

@@ -28,7 +28,7 @@ export function PredictionModel({ markets }: PredictionModelProps) {
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="visible"
       variants={stagger}
       className="space-y-6"
