@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FlightPlan } from '@/lib/types/flight';
 import { formatNumber, formatPct, formatCurrency } from '@/lib/utils/formatters';
 import { AnimatedNumber } from '@/components/common/AnimatedNumber';
-import { useInView } from '@/hooks/useInView';
+
 
 interface FlightHeroProps {
   data: FlightPlan;
@@ -23,8 +23,6 @@ const stagger = {
 };
 
 export function FlightHero({ data }: FlightHeroProps) {
-  const { ref, inView } = useInView();
-
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'green_sold_out':
@@ -58,9 +56,8 @@ export function FlightHero({ data }: FlightHeroProps) {
 
   return (
     <motion.div
-      ref={ref}
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-surface via-surface to-surface-100 pt-24 px-4 sm:px-6 lg:px-8"
     >
