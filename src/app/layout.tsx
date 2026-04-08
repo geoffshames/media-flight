@@ -10,6 +10,7 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://flight.crowdcontroldigital.com'),
   title: 'Media Flight | Crowd Control Digital',
   description: 'Data-driven tour pacing & media budget planning',
 };
