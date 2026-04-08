@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Allow payload override for testing; fall back to env var or default
-    const fromAddress = (payload as Record<string, unknown>).fromOverride as string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fromAddress = ((payload as unknown as Record<string, unknown>).fromOverride as string)
       || process.env.RESEND_FROM_EMAIL
       || 'alerts@crowdcontroldigital.com';
     const html = buildAlertEmailHtml(payload);
