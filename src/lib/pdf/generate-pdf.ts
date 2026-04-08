@@ -503,9 +503,9 @@ export function generateFlightPDF(plan: FlightPlan, mode: PDFMode = 'summary'): 
     format: 'a4',
   });
 
-  // Register N27 Bold font
-  doc.addFileToVFS('N27-Bold.otf', N27_BOLD_BASE64);
-  doc.addFont('N27-Bold.otf', 'N27Bold', 'bold');
+  // Register N27 Bold font (TTF format required for jsPDF glyph mapping)
+  doc.addFileToVFS('N27-Bold.ttf', N27_BOLD_BASE64);
+  doc.addFont('N27-Bold.ttf', 'N27Bold', 'bold');
 
   // Summary page (always included)
   drawSummaryPage(doc, plan);
