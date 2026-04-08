@@ -111,7 +111,7 @@ function drawFooter(doc: jsPDF, plan: FlightPlan) {
 
 // ── Summary Page ──
 
-function drawSummaryPage(doc: jsPDF, plan: FlightPlan) {
+function drawSummaryPage(doc: jsPDF, plan: FlightPlan, mode: PDFMode = 'summary') {
   drawPageBg(doc);
   drawHeader(doc, plan);
   const w = doc.internal.pageSize.getWidth();
@@ -265,7 +265,7 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan) {
     // Add page if needed
     if (y > doc.internal.pageSize.getHeight() - 22) {
       drawFooter(doc, plan);
-      doc.addPage('a4', 'portrait');
+      doc.addPage('a4', mode === 'summary' ? 'portrait' : 'landscape');
       drawPageBg(doc);
       drawHeader(doc, plan);
       y = 28;
@@ -533,69 +533,20 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
 
   y += budgetH + 10;
 
-  // ── Pacing note ──
+  // ── Pacing note — color-coded by tier ──
   if (market.pacingNote) {
     drawSectionLabel(doc, 'PACING NOTE', margin, y);
     y += 6;
 
+    const tc = tierColor(market.prediction.tier);
     const noteH = 14;
-    drawCard(doc, margin, y, contentW, noteH);
+    drawCard(doc, margin, y, contentW, noteH, { topAccent: tc });
     doc.setFont('N27Bold', 'bold');
     doc.setFontSize(7);
-    setColor(doc, TEXT_SECONDARY);
+    setColor(doc, tc);
     const lines = doc.splitTextToSize(market.pacingNote, contentW - 16);
     doc.text(lines, margin + 8, y + 7);
-    y += noteH + 8;
-  } else {
-    y += 4;
   }
-
-  // ── Sell-through progress bar ──
-  drawSectionLabel(doc, 'SELL-THROUGH PROGRESS', margin, y);
-  y += 6;
-
-  const barW = contentW;
-  const barH = 10;
-
-  // Track background
-  drawCard(doc, margin, y, barW, barH);
-
-  // Fill bar
-  const fillW = Math.min(market.pctSold, 1) * barW;
-  if (fillW > 4) {
-    setFill(doc, tierColor(market.prediction.tier));
-    doc.roundedRect(margin, y, fillW, barH, 2.5, 2.5, 'F');
-  }
-
-  // Percentage label inside the bar
-  doc.setFont('N27Bold', 'bold');
-  doc.setFontSize(6);
-  setColor(doc, fillW > 30 ? BG : TEXT_PRIMARY);
-  const pctText = `${(market.pctSold * 100).toFixed(0)}%`;
-  if (fillW > 30) {
-    doc.text(pctText, margin + fillW - 3, y + 6.5, { align: 'right' });
-  } else {
-    setColor(doc, TEXT_PRIMARY);
-    doc.text(pctText, margin + fillW + 3, y + 6.5);
-  }
-
-  // Projected marker line
-  const projPct = Math.min(market.prediction.blendedPredPct, 1);
-  const projX = margin + projPct * barW;
-  setDraw(doc, TEXT_MUTED);
-  doc.setLineWidth(0.4);
-  doc.setLineDashPattern([1.5, 1], 0);
-  doc.line(projX, y - 2, projX, y + barH + 2);
-  doc.setLineDashPattern([], 0);
-
-  // Projected label above the bar
-  doc.setFontSize(5);
-  setColor(doc, TEXT_MUTED);
-  const projLabel = `proj: ${(market.prediction.blendedPredPct * 100).toFixed(0)}%`;
-  const projLabelW = doc.getTextWidth(projLabel);
-  // Keep label within page bounds
-  const projLabelX = Math.min(projX - projLabelW / 2, w - margin - projLabelW);
-  doc.text(projLabel, Math.max(projLabelX, margin), y - 3.5);
 
   drawFooter(doc, plan);
 }
@@ -614,7 +565,7 @@ export function generateFlightPDF(plan: FlightPlan, mode: PDFMode = 'summary'): 
   doc.addFont('N27-Bold.ttf', 'N27Bold', 'bold');
 
   // Summary page (always included)
-  drawSummaryPage(doc, plan);
+  drawSummaryPage(doc, plan, mode);
 
   // Market detail pages (full mode only)
   if (mode === 'full') {
