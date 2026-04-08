@@ -76,9 +76,11 @@ function drawHeader(doc: jsPDF, plan: FlightPlan) {
   setColor(doc, ACCENT);
   doc.text('MEDIA FLIGHT', 20, 14);
 
-  // CCD logo (right side)
+  // CCD wordmark (right side) — actual ratio is ~7.16:1
+  const logoH = 4.5;
+  const logoW = logoH * 7.16;
   try {
-    doc.addImage(CCD_LOGO_BASE64, 'PNG', w - 55, 8, 40, 10);
+    doc.addImage(CCD_LOGO_BASE64, 'PNG', w - 15 - logoW, 9, logoW, logoH);
   } catch {
     // Fallback text if image fails
     doc.setFontSize(6);
@@ -140,36 +142,55 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan) {
   doc.text(plan.dateRange, 20, y);
   y += 12;
 
-  // ── Stat cards row ──
-  const cardW = (w - 60) / 5;
-  const cardH = 22;
-  const stats = [
+  // ── Stat cards — 3 + 2 rows for portrait ──
+  const margin = 15;
+  const contentW = w - margin * 2;
+  const gap = 4;
+
+  // Row 1: 3 cards
+  const card3W = (contentW - gap * 2) / 3;
+  const cardH = 20;
+  const statsRow1 = [
     { label: 'MARKETS', value: plan.summary.totalMarkets.toString(), color: TEXT_PRIMARY },
     { label: 'SELL-THROUGH', value: `${(plan.summary.avgSellThrough * 100).toFixed(0)}%`, color: TEXT_PRIMARY },
     { label: 'TICKETS SOLD', value: plan.summary.totalSold.toLocaleString(), color: TEXT_PRIMARY },
+  ];
+  statsRow1.forEach((stat, i) => {
+    const x = margin + i * (card3W + gap);
+    setFill(doc, SURFACE);
+    doc.roundedRect(x, y, card3W, cardH, 2, 2, 'F');
+    doc.setFont('N27Bold', 'bold');
+    doc.setFontSize(5.5);
+    setColor(doc, TEXT_MUTED);
+    doc.text(stat.label, x + 5, y + 7);
+    doc.setFontSize(14);
+    setColor(doc, stat.color);
+    doc.text(stat.value, x + 5, y + 16);
+  });
+  y += cardH + gap;
+
+  // Row 2: 2 cards
+  const card2W = (contentW - gap) / 2;
+  const statsRow2 = [
     { label: 'CAPACITY', value: plan.summary.totalCapacity.toLocaleString(), color: TEXT_PRIMARY },
     { label: 'PREDICTED GAP', value: plan.summary.totalPredictedGap.toLocaleString(), color: ACCENT },
   ];
-
-  stats.forEach((stat, i) => {
-    const x = 20 + i * (cardW + 5);
+  statsRow2.forEach((stat, i) => {
+    const x = margin + i * (card2W + gap);
     setFill(doc, SURFACE);
-    doc.roundedRect(x, y, cardW, cardH, 2, 2, 'F');
-
+    doc.roundedRect(x, y, card2W, cardH, 2, 2, 'F');
     doc.setFont('N27Bold', 'bold');
-    doc.setFontSize(6);
+    doc.setFontSize(5.5);
     setColor(doc, TEXT_MUTED);
-    doc.text(stat.label, x + 6, y + 8);
-
-    doc.setFontSize(16);
+    doc.text(stat.label, x + 5, y + 7);
+    doc.setFontSize(14);
     setColor(doc, stat.color);
-    doc.text(stat.value, x + 6, y + 18);
+    doc.text(stat.value, x + 5, y + 16);
   });
+  y += cardH + 8;
 
-  y += cardH + 10;
-
-  // ── Tier breakdown ──
-  const tierW = (w - 60) / 4;
+  // ── Tier breakdown — 4 cards in one row ──
+  const tierW = (contentW - gap * 3) / 4;
   const tiers = [
     { label: 'HEALTHY', count: plan.summary.tierCounts.green, color: TIER_GREEN },
     { label: 'WATCH', count: plan.summary.tierCounts.yellow, color: TIER_YELLOW },
@@ -178,125 +199,140 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan) {
   ];
 
   tiers.forEach((tier, i) => {
-    const x = 20 + i * (tierW + 5);
+    const x = margin + i * (tierW + gap);
     setFill(doc, SURFACE);
-    doc.roundedRect(x, y, tierW, 18, 2, 2, 'F');
-
-    // Color bar at top
+    doc.roundedRect(x, y, tierW, 16, 2, 2, 'F');
     setFill(doc, tier.color);
-    doc.rect(x, y, tierW, 2, 'F');
-
+    doc.rect(x, y, tierW, 1.5, 'F');
     doc.setFont('N27Bold', 'bold');
-    doc.setFontSize(6);
+    doc.setFontSize(5.5);
     setColor(doc, tier.color);
-    doc.text(`● ${tier.label}`, x + 6, y + 9);
-
-    doc.setFontSize(14);
-    setColor(doc, TEXT_PRIMARY);
-    doc.text(tier.count.toString(), x + tierW - 8, y + 13, { align: 'right' });
-  });
-
-  y += 28;
-
-  // ── Budget recommendations ──
-  doc.setFont('N27Bold', 'bold');
-  doc.setFontSize(7);
-  setColor(doc, TEXT_MUTED);
-  doc.text('RECOMMENDED BUDGETS', 20, y);
-  y += 6;
-
-  plan.summary.budgetRecommendations.forEach((b, i) => {
-    const x = 20 + i * 80;
-    setFill(doc, SURFACE);
-    doc.roundedRect(x, y, 72, 16, 2, 2, 'F');
-
-    doc.setFontSize(6);
-    setColor(doc, TEXT_MUTED);
-    doc.text(`@ $${b.rate}/TICKET`, x + 6, y + 6);
-
+    doc.text(`● ${tier.label}`, x + 5, y + 8);
     doc.setFontSize(12);
     setColor(doc, TEXT_PRIMARY);
-    doc.text(`$${b.totalBudget.toLocaleString()}`, x + 6, y + 13);
+    doc.text(tier.count.toString(), x + tierW - 6, y + 12, { align: 'right' });
   });
 
-  y += 26;
+  y += 24;
 
-  // ── Market table ──
+  // ── Budget recommendations — side by side ──
   doc.setFont('N27Bold', 'bold');
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   setColor(doc, TEXT_MUTED);
-  doc.text('MARKET OVERVIEW', 20, y);
-  y += 6;
+  doc.text('RECOMMENDED BUDGETS', margin, y);
+  y += 5;
 
-  // Table header
+  const budgetW = (contentW - gap) / 2;
+  plan.summary.budgetRecommendations.forEach((b, i) => {
+    const x = margin + i * (budgetW + gap);
+    setFill(doc, SURFACE);
+    doc.roundedRect(x, y, budgetW, 14, 2, 2, 'F');
+    doc.setFontSize(5.5);
+    setColor(doc, TEXT_MUTED);
+    doc.text(`@ $${b.rate}/TICKET`, x + 5, y + 5.5);
+    doc.setFontSize(11);
+    setColor(doc, TEXT_PRIMARY);
+    doc.text(`$${b.totalBudget.toLocaleString()}`, x + 5, y + 12);
+  });
+
+  y += 22;
+
+  // ── Market table — portrait layout (210mm width) ──
+  doc.setFont('N27Bold', 'bold');
+  doc.setFontSize(6);
+  setColor(doc, TEXT_MUTED);
+  doc.text('MARKET OVERVIEW', margin, y);
+  y += 5;
+
+  // Column definitions for portrait width
+  const tblX = margin;
   const cols = [
-    { label: 'MARKET', x: 20, width: 55 },
-    { label: 'DATE', x: 75, width: 28 },
-    { label: 'CAPACITY', x: 103, width: 25 },
-    { label: 'SOLD', x: 128, width: 20 },
-    { label: '% SOLD', x: 148, width: 20 },
-    { label: 'PROJECTED', x: 168, width: 25 },
-    { label: 'GAP', x: 193, width: 20 },
-    { label: 'TIER', x: 213, width: 30 },
-    { label: 'BUDGET', x: 243, width: 30 },
+    { label: 'MARKET',    x: tblX,       },
+    { label: 'DATE',      x: tblX + 38,  },
+    { label: 'CAP',       x: tblX + 56,  },
+    { label: 'SOLD',      x: tblX + 72,  },
+    { label: '%',         x: tblX + 88,  },
+    { label: 'PROJ',      x: tblX + 99,  },
+    { label: 'GAP',       x: tblX + 114, },
+    { label: 'TIER',      x: tblX + 130, },
+    { label: 'BUDGET',    x: tblX + 162, },
   ];
 
   setFill(doc, SURFACE);
-  doc.rect(20, y, w - 40, 6, 'F');
-  doc.setFontSize(5);
+  doc.rect(tblX, y, contentW, 5, 'F');
+  doc.setFontSize(4.5);
   setColor(doc, TEXT_MUTED);
   cols.forEach(col => {
-    doc.text(col.label, col.x + 2, y + 4);
+    doc.text(col.label, col.x + 2, y + 3.5);
   });
-  y += 7;
+  y += 6;
 
-  // Table rows
+  // Table rows — all markets
   const onSaleMarkets = plan.markets.filter(m => m.status !== 'played');
+  const rowH = 5.5;
   onSaleMarkets.forEach((market, i) => {
-    if (y > doc.internal.pageSize.getHeight() - 25) return; // Safety
+    // Add page if needed
+    if (y > doc.internal.pageSize.getHeight() - 20) {
+      drawFooter(doc, plan);
+      doc.addPage('a4', 'portrait');
+      drawPageBg(doc);
+      drawHeader(doc, plan);
+      y = 28;
+      // Redraw table header
+      setFill(doc, SURFACE);
+      doc.rect(tblX, y, contentW, 5, 'F');
+      doc.setFont('N27Bold', 'bold');
+      doc.setFontSize(4.5);
+      setColor(doc, TEXT_MUTED);
+      cols.forEach(col => {
+        doc.text(col.label, col.x + 2, y + 3.5);
+      });
+      y += 6;
+    }
 
     const rowBg = i % 2 === 0 ? BG : SURFACE;
     setFill(doc, rowBg);
-    doc.rect(20, y - 1, w - 40, 6, 'F');
+    doc.rect(tblX, y - 1, contentW, rowH, 'F');
 
-    doc.setFontSize(5.5);
+    doc.setFont('N27Bold', 'bold');
+    doc.setFontSize(5);
 
     // City
     setColor(doc, TEXT_PRIMARY);
-    doc.text(market.city, 22, y + 3);
+    doc.text(market.city, cols[0].x + 2, y + 3);
 
     // Date
     setColor(doc, TEXT_MUTED);
-    doc.text(new Date(market.showDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 77, y + 3);
+    doc.text(new Date(market.showDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cols[1].x + 2, y + 3);
 
     // Capacity
     setColor(doc, TEXT_SECONDARY);
-    doc.text(market.capacity.toLocaleString(), 105, y + 3);
+    doc.text(market.capacity.toLocaleString(), cols[2].x + 2, y + 3);
 
     // Sold
-    doc.text(market.ticketsSold.toLocaleString(), 130, y + 3);
+    doc.text(market.ticketsSold.toLocaleString(), cols[3].x + 2, y + 3);
 
     // % Sold
     setColor(doc, TEXT_PRIMARY);
-    doc.text(`${(market.pctSold * 100).toFixed(0)}%`, 150, y + 3);
+    doc.text(`${(market.pctSold * 100).toFixed(0)}%`, cols[4].x + 2, y + 3);
 
     // Projected
-    doc.text(`${(market.prediction.blendedPredPct * 100).toFixed(0)}%`, 170, y + 3);
+    doc.text(`${(market.prediction.blendedPredPct * 100).toFixed(0)}%`, cols[5].x + 2, y + 3);
 
     // Gap
     setColor(doc, market.prediction.gap > 0 ? ACCENT : TIER_GREEN);
-    doc.text(market.prediction.gap.toLocaleString(), 195, y + 3);
+    doc.text(market.prediction.gap.toLocaleString(), cols[6].x + 2, y + 3);
 
     // Tier
     setColor(doc, tierColor(market.prediction.tier));
-    doc.text(market.prediction.tierLabel, 215, y + 3);
+    doc.text(market.prediction.tierLabel, cols[7].x + 2, y + 3);
 
     // Budget (first rate)
     setColor(doc, TEXT_SECONDARY);
     const budget = market.prediction.budgets[0];
-    doc.text(budget ? `$${budget.amount.toLocaleString()}` : '—', 245, y + 3);
+    doc.text(budget ? `$${budget.amount.toLocaleString()}` : '—', cols[8].x + 2, y + 3);
 
-    y += 6;
+    y += rowH;
   });
 
   drawFooter(doc, plan);
@@ -498,7 +534,7 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
 
 export function generateFlightPDF(plan: FlightPlan, mode: PDFMode = 'summary'): void {
   const doc = new jsPDF({
-    orientation: 'landscape',
+    orientation: mode === 'summary' ? 'portrait' : 'landscape',
     unit: 'mm',
     format: 'a4',
   });
