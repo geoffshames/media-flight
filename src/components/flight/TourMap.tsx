@@ -23,7 +23,6 @@ const CITY_COORDS: Record<string, [number, number]> = {
   Milan:       [9.1900, 45.4642],
   Madrid:      [-3.7038, 40.4168],
   Barcelona:   [2.1734, 41.3851],
-  // US cities for benchmark (if ever needed)
   Atlanta:     [-84.3880, 33.7490],
   Boston:      [-71.0589, 42.3601],
   'Washington DC': [-77.0369, 38.9072],
@@ -38,17 +37,52 @@ const CITY_COORDS: Record<string, [number, number]> = {
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
+// Build GeoJSON from market data
+function buildGeoJSON(markets: Market[]) {
+  const features = markets
+    .filter((m) => CITY_COORDS[m.city])
+    .map((m) => {
+      const coords = CITY_COORDS[m.city];
+      const gap = m.prediction.gap;
+      // Circle radius in pixels based on gap severity
+      const radius = gap > 500 ? 12 : gap > 100 ? 9 : 6;
+      const needsAttention = m.prediction.tier === 'red' || m.prediction.tier === 'orange';
+
+      return {
+        type: 'Feature' as const,
+        properties: {
+          city: m.city,
+          venue: m.venue,
+          tierColor: m.prediction.tierColor,
+          tier: m.prediction.tier,
+          radius,
+          needsAttention,
+          pctSold: m.pctSold,
+          ticketsSold: m.ticketsSold,
+          capacity: m.capacity,
+          gap: m.prediction.gap,
+          daysOut: m.daysOut,
+          budgetAmount: m.prediction.budgets[0]?.amount || 0,
+          budgetRate: m.prediction.budgets[0]?.rate || 0,
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: coords,
+        },
+      };
+    });
+
+  return { type: 'FeatureCollection' as const, features };
+}
+
 export function TourMap({ markets }: TourMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Filter markets with known coordinates
   const mappedMarkets = markets.filter((m) => CITY_COORDS[m.city]);
 
-  // Compute map bounds from market coordinates
   const getBounds = useCallback(() => {
     const coords = mappedMarkets.map((m) => CITY_COORDS[m.city]);
     if (coords.length === 0) return null;
@@ -65,7 +99,6 @@ export function TourMap({ markets }: TourMapProps) {
 
     let cancelled = false;
 
-    // Dynamically import mapbox-gl to avoid SSR issues
     import('mapbox-gl').then((mapboxgl) => {
       if (cancelled || !mapContainer.current) return;
 
@@ -90,16 +123,17 @@ export function TourMap({ markets }: TourMapProps) {
         mapRef.current = map;
         setMapLoaded(true);
 
-        // Fit to market bounds
         const bounds = getBounds();
         if (bounds) {
           map.fitBounds(bounds, { padding: 60, duration: 1500 });
         }
 
-        // Add tour route line
-        const routeCoords = mappedMarkets
-          .sort((a, b) => a.showDate.localeCompare(b.showDate))
-          .map((m) => CITY_COORDS[m.city]);
+        const geojson = buildGeoJSON(mappedMarkets);
+
+        // --- Tour route line ---
+        const sortedByDate = [...mappedMarkets]
+          .sort((a, b) => a.showDate.localeCompare(b.showDate));
+        const routeCoords = sortedByDate.map((m) => CITY_COORDS[m.city]);
 
         if (routeCoords.length > 1) {
           map.addSource('tour-route', {
@@ -107,10 +141,7 @@ export function TourMap({ markets }: TourMapProps) {
             data: {
               type: 'Feature',
               properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: routeCoords,
-              },
+              geometry: { type: 'LineString', coordinates: routeCoords },
             },
           });
 
@@ -118,117 +149,148 @@ export function TourMap({ markets }: TourMapProps) {
             id: 'tour-route-line',
             type: 'line',
             source: 'tour-route',
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round',
-            },
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
             paint: {
               'line-color': '#FD3737',
               'line-width': 1.5,
-              'line-opacity': 0.25,
+              'line-opacity': 0.2,
               'line-dasharray': [4, 4],
             },
           });
         }
 
-        // Add custom markers for each market
-        mappedMarkets.forEach((market) => {
-          const coords = CITY_COORDS[market.city];
-          if (!coords) return;
+        // --- Market points source ---
+        map.addSource('markets', { type: 'geojson', data: geojson as any });
 
-          const color = market.prediction.tierColor;
-          const gap = market.prediction.gap;
-          const isRed = market.prediction.tier === 'red';
-          const isOrange = market.prediction.tier === 'orange';
-          const needsAttention = isRed || isOrange;
+        // Outer glow circle (larger, faint)
+        map.addLayer({
+          id: 'market-glow',
+          type: 'circle',
+          source: 'markets',
+          paint: {
+            'circle-radius': ['get', 'radius'],
+            'circle-radius-transition': { duration: 200 },
+            'circle-color': ['get', 'tierColor'],
+            'circle-opacity': 0.15,
+            'circle-blur': 1,
+          },
+        });
 
-          // Pin size based on gap
-          const size = gap > 500 ? 28 : gap > 100 ? 22 : 16;
+        // Main circle
+        map.addLayer({
+          id: 'market-circles',
+          type: 'circle',
+          source: 'markets',
+          paint: {
+            'circle-radius': ['get', 'radius'],
+            'circle-color': ['get', 'tierColor'],
+            'circle-opacity': 0.9,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': 'rgba(255,255,255,0.25)',
+          },
+        });
 
-          // Create custom marker element
-          const el = document.createElement('div');
-          el.className = 'tour-marker';
-          el.style.cssText = `
-            width: ${size}px;
-            height: ${size}px;
-            border-radius: 50%;
-            background: ${color};
-            border: 2px solid rgba(255,255,255,0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 ${needsAttention ? '12' : '6'}px ${color}88;
-            position: relative;
-          `;
+        // City labels (native symbol layer — always moves with map)
+        map.addLayer({
+          id: 'market-labels',
+          type: 'symbol',
+          source: 'markets',
+          layout: {
+            'text-field': ['get', 'city'],
+            'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+            'text-size': 11,
+            'text-anchor': 'bottom',
+            'text-offset': [0, -1.2],
+            'text-allow-overlap': false,
+            'text-ignore-placement': false,
+          },
+          paint: {
+            'text-color': '#D4D4D8',
+            'text-halo-color': 'rgba(10,10,10,0.9)',
+            'text-halo-width': 1.5,
+          },
+        });
 
-          // Pulse ring for at-risk markets
-          if (needsAttention) {
-            const pulse = document.createElement('div');
-            pulse.style.cssText = `
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: ${size + 12}px;
-              height: ${size + 12}px;
-              border-radius: 50%;
-              border: 1.5px solid ${color};
-              animation: pulse-ring 2s ease-out infinite;
-              pointer-events: none;
-            `;
-            el.appendChild(pulse);
+        // Pulse ring layer for at-risk markets (red/orange only)
+        // We use a separate source with only at-risk markets
+        const atRiskGeoJSON = {
+          type: 'FeatureCollection' as const,
+          features: geojson.features.filter((f) => f.properties.needsAttention),
+        };
+
+        map.addSource('markets-at-risk', { type: 'geojson', data: atRiskGeoJSON as any });
+
+        map.addLayer({
+          id: 'market-pulse',
+          type: 'circle',
+          source: 'markets-at-risk',
+          paint: {
+            'circle-radius': 18,
+            'circle-color': 'transparent',
+            'circle-opacity': 0,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': ['get', 'tierColor'],
+            'circle-stroke-opacity': 0.4,
+          },
+        });
+
+        // Animate the pulse ring
+        let pulseRadius = 12;
+        let pulseOpacity = 0.5;
+        let growing = true;
+        function animatePulse() {
+          if (!mapRef.current) return;
+          if (growing) {
+            pulseRadius += 0.15;
+            pulseOpacity -= 0.005;
+            if (pulseRadius >= 24) { growing = false; }
+          } else {
+            pulseRadius = 12;
+            pulseOpacity = 0.5;
+            growing = true;
           }
+          map.setPaintProperty('market-pulse', 'circle-radius', pulseRadius);
+          map.setPaintProperty('market-pulse', 'circle-stroke-opacity', Math.max(pulseOpacity, 0));
+          requestAnimationFrame(animatePulse);
+        }
+        animatePulse();
 
-          // City label
-          const label = document.createElement('div');
-          label.style.cssText = `
-            position: absolute;
-            top: -24px;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-            font-family: 'Work Sans', sans-serif;
-            font-size: 11px;
-            font-weight: 500;
-            color: #D4D4D8;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-            pointer-events: none;
-          `;
-          label.textContent = market.city;
-          el.appendChild(label);
+        // --- Interactivity ---
+        map.on('mouseenter', 'market-circles', (e: any) => {
+          map.getCanvas().style.cursor = 'pointer';
+          if (e.features?.[0]) {
+            const props = e.features[0].properties;
+            const market = mappedMarkets.find((m) => m.city === props.city);
+            if (market) setSelectedMarket(market);
+          }
+        });
 
-          // Hover effects
-          el.addEventListener('mouseenter', () => {
-            el.style.transform = 'scale(1.3)';
-            el.style.zIndex = '10';
-            el.style.borderColor = 'rgba(255,255,255,0.6)';
-            label.style.color = '#FAFAFA';
-            label.style.fontWeight = '600';
-            setSelectedMarket(market);
-          });
-          el.addEventListener('mouseleave', () => {
-            el.style.transform = 'scale(1)';
-            el.style.zIndex = '1';
-            el.style.borderColor = 'rgba(255,255,255,0.2)';
-            label.style.color = '#D4D4D8';
-            label.style.fontWeight = '500';
-          });
-          el.addEventListener('click', () => {
-            setSelectedMarket((prev) => prev?.city === market.city ? null : market);
-          });
+        map.on('mouseleave', 'market-circles', () => {
+          map.getCanvas().style.cursor = '';
+        });
 
-          const marker = new mapboxgl.default.Marker({ element: el, anchor: 'center' })
-            .setLngLat(coords)
-            .addTo(map);
+        map.on('click', 'market-circles', (e: any) => {
+          if (e.features?.[0]) {
+            const props = e.features[0].properties;
+            const market = mappedMarkets.find((m) => m.city === props.city);
+            if (market) {
+              setSelectedMarket((prev) => prev?.city === market.city ? null : market);
+            }
+          }
+        });
 
-          markersRef.current.push(marker);
+        // Click outside a marker to deselect
+        map.on('click', (e: any) => {
+          const features = map.queryRenderedFeatures(e.point, { layers: ['market-circles'] });
+          if (features.length === 0) {
+            setSelectedMarket(null);
+          }
         });
       });
     });
 
     return () => {
       cancelled = true;
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -238,12 +300,7 @@ export function TourMap({ markets }: TourMapProps) {
 
   return (
     <div className="relative w-full">
-      {/* Inject pulse animation */}
       <style jsx global>{`
-        @keyframes pulse-ring {
-          0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
-          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
-        }
         .mapboxgl-ctrl-group {
           background: #1A1A1A !important;
           border: 1px solid #333 !important;
@@ -285,7 +342,7 @@ export function TourMap({ markets }: TourMapProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-4 right-4 w-72 p-5 rounded-xl bg-surface-50/95 backdrop-blur-md border border-surface-200 shadow-xl shadow-black/40"
+            className="absolute top-4 right-4 w-72 p-5 rounded-xl bg-surface-50/95 backdrop-blur-md border border-surface-200 shadow-xl shadow-black/40 pointer-events-none"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
