@@ -420,20 +420,18 @@ export function TourMap({ markets }: TourMapProps) {
       </AnimatePresence>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-4 font-body text-xs text-text-muted">
+      <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 font-body text-xs text-text-muted">
         {[
           { color: '#FF1744', label: 'Critical' },
           { color: '#FF9100', label: 'At Risk' },
           { color: '#FFD600', label: 'Needs Push' },
-          { color: '#00E676', label: 'On Pace / Sold Out' },
+          { color: '#00E676', label: 'Healthy' },
         ].map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
+          <div key={item.label} className="flex items-center gap-1.5 sm:gap-2">
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
             <span>{item.label}</span>
           </div>
         ))}
-        <span className="text-surface-300 mx-1">|</span>
-        <span>Pin size = gap to sellout</span>
       </div>
     </div>
   );
