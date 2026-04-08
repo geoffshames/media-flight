@@ -14,6 +14,7 @@ import { PredictionModel } from '@/components/flight/PredictionModel';
 import { SectionDivider } from '@/components/common/SectionDivider';
 import { TourMap } from '@/components/flight/TourMap';
 import { UploadWidget } from '@/components/flight/UploadWidget';
+import { DownloadButton } from '@/components/flight/DownloadButton';
 import { PasswordGate } from '@/components/flight/PasswordGate';
 
 interface FlightClientProps {
@@ -81,6 +82,11 @@ function FlightClientInner() {
         <section className="w-full">
           <FlightHero data={flight} />
         </section>
+
+        {/* Export bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-end">
+          <DownloadButton />
+        </div>
 
         <SectionDivider />
 
