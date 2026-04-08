@@ -11,6 +11,7 @@ import { BenchmarkComparison } from '@/components/flight/BenchmarkComparison';
 import { Methodology } from '@/components/flight/Methodology';
 import { PredictionModel } from '@/components/flight/PredictionModel';
 import { SectionDivider } from '@/components/common/SectionDivider';
+import { TourMap } from '@/components/flight/TourMap';
 
 interface FlightClientProps {
   flight: FlightPlan;
@@ -54,9 +55,17 @@ export function FlightClient({ flight }: FlightClientProps) {
 
         <SectionDivider />
 
+        {/* Tour Map */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+          <SectionHeader number="01" title="Tour Map" />
+          <TourMap markets={flight.markets} />
+        </section>
+
+        <SectionDivider />
+
         {/* Market Overview */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <SectionHeader number="01" title="Market Overview" />
+          <SectionHeader number="02" title="Market Overview" />
           <MarketOverview markets={flight.markets} />
         </section>
 
@@ -64,7 +73,7 @@ export function FlightClient({ flight }: FlightClientProps) {
 
         {/* Budget Matrix */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <SectionHeader number="02" title="Budget Analysis" />
+          <SectionHeader number="03" title="Budget Analysis" />
           <BudgetMatrix markets={flight.markets} cptRates={flight.cptRates} />
         </section>
 
@@ -72,7 +81,7 @@ export function FlightClient({ flight }: FlightClientProps) {
 
         {/* Market Deep Dives */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <SectionHeader number="03" title="Market Deep Dives" />
+          <SectionHeader number="04" title="Market Deep Dives" />
           <MarketDeepDives
             markets={flight.markets}
             cptRates={flight.cptRates}
@@ -84,7 +93,7 @@ export function FlightClient({ flight }: FlightClientProps) {
 
         {/* Predictions */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <SectionHeader number="04" title="Predictions" />
+          <SectionHeader number="05" title="Predictions" />
           <PredictionModel markets={flight.markets} />
         </section>
 
@@ -94,7 +103,7 @@ export function FlightClient({ flight }: FlightClientProps) {
         {flight.benchmark && (
           <>
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-              <SectionHeader number="05" title="Benchmark Comparison" />
+              <SectionHeader number="06" title="Benchmark Comparison" />
               <BenchmarkComparison benchmark={flight.benchmark} />
             </section>
 
@@ -104,7 +113,7 @@ export function FlightClient({ flight }: FlightClientProps) {
 
         {/* Methodology */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <SectionHeader number={flight.benchmark ? '06' : '05'} title="Methodology" />
+          <SectionHeader number={flight.benchmark ? '07' : '06'} title="Methodology" />
           <Methodology methodology={flight.methodology} />
         </section>
 
