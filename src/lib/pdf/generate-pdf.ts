@@ -229,32 +229,53 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan, mode: PDFMode = 'summary'
 
   y += 24;
 
-  // ── Market table — portrait layout (210mm width) ──
+  // ── Market table — always starts on its own page in full mode ──
+  // In summary mode it flows inline; in full mode it gets a dedicated landscape page
+  if (mode === 'full') {
+    drawFooter(doc, plan);
+    doc.addPage('a4', 'landscape');
+    drawPageBg(doc);
+    drawHeader(doc, plan);
+    y = 28;
+  }
+
   drawSectionLabel(doc, 'MARKET OVERVIEW', margin, y);
   y += 6;
 
-  // Column definitions for portrait width — tighter, no overlap
-  const tblX = margin;
-  const cols = [
-    { label: 'MARKET',    x: tblX,       w: 34 },
-    { label: 'DATE',      x: tblX + 34,  w: 18 },
-    { label: 'CAP',       x: tblX + 52,  w: 16 },
-    { label: 'SOLD',      x: tblX + 68,  w: 16 },
-    { label: '%',         x: tblX + 84,  w: 12 },
-    { label: 'PROJ',      x: tblX + 96,  w: 12 },
-    { label: 'GAP',       x: tblX + 108, w: 16 },
-    { label: 'TIER',      x: tblX + 124, w: 28 },
-    { label: 'BUDGET',    x: tblX + 152, w: 28 },
+  // Recalculate widths for the current page (may be landscape or portrait)
+  const tblPageW = doc.internal.pageSize.getWidth();
+  const tblMargin = margin;
+  const tblContentW = tblPageW - tblMargin * 2;
+  const tblX = tblMargin;
+
+  // Column proportions — spread across full available width
+  const colProps = [
+    { label: 'MARKET',  pct: 0.18 },
+    { label: 'DATE',    pct: 0.10 },
+    { label: 'CAP',     pct: 0.10 },
+    { label: 'SOLD',    pct: 0.10 },
+    { label: '%',       pct: 0.08 },
+    { label: 'PROJ',    pct: 0.08 },
+    { label: 'GAP',     pct: 0.10 },
+    { label: 'TIER',    pct: 0.14 },
+    { label: 'BUDGET',  pct: 0.12 },
   ];
+  let colX = tblX;
+  const cols = colProps.map(cp => {
+    const colW = tblContentW * cp.pct;
+    const col = { label: cp.label, x: colX, w: colW };
+    colX += colW;
+    return col;
+  });
 
   // Table header
   setFill(doc, SURFACE);
-  doc.roundedRect(tblX, y, contentW, 6, 1.5, 1.5, 'F');
+  doc.roundedRect(tblX, y, tblContentW, 6, 1.5, 1.5, 'F');
   doc.setFont('N27Bold', 'bold');
   doc.setFontSize(4.5);
   setColor(doc, TEXT_MUTED);
   cols.forEach(col => {
-    doc.text(col.label, col.x + 3, y + 4);
+    doc.text(col.label, col.x + 4, y + 4);
   });
   y += 7.5;
 
@@ -271,12 +292,12 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan, mode: PDFMode = 'summary'
       y = 28;
       // Redraw table header
       setFill(doc, SURFACE);
-      doc.roundedRect(tblX, y, contentW, 6, 1.5, 1.5, 'F');
+      doc.roundedRect(tblX, y, tblContentW, 6, 1.5, 1.5, 'F');
       doc.setFont('N27Bold', 'bold');
       doc.setFontSize(4.5);
       setColor(doc, TEXT_MUTED);
       cols.forEach(col => {
-        doc.text(col.label, col.x + 3, y + 4);
+        doc.text(col.label, col.x + 4, y + 4);
       });
       y += 7.5;
     }
@@ -284,66 +305,52 @@ function drawSummaryPage(doc: jsPDF, plan: FlightPlan, mode: PDFMode = 'summary'
     // Alternating row background
     const rowBg = i % 2 === 0 ? BG : SURFACE;
     setFill(doc, rowBg);
-    doc.rect(tblX, y - 2, contentW, rowH, 'F');
+    doc.rect(tblX, y - 2, tblContentW, rowH, 'F');
 
     // Subtle row separator
     if (i > 0) {
       setDraw(doc, SURFACE_LIGHT);
       doc.setLineWidth(0.15);
-      doc.line(tblX + 3, y - 2, tblX + contentW - 3, y - 2);
+      doc.line(tblX + 4, y - 2, tblX + tblContentW - 4, y - 2);
     }
 
     doc.setFont('N27Bold', 'bold');
-    doc.setFontSize(5);
+    doc.setFontSize(5.5);
 
     // City
     setColor(doc, TEXT_PRIMARY);
-    doc.text(market.city, cols[0].x + 3, y + 2);
+    doc.text(market.city, cols[0].x + 4, y + 2);
 
     // Date
     setColor(doc, TEXT_MUTED);
-    doc.text(new Date(market.showDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cols[1].x + 3, y + 2);
+    doc.text(new Date(market.showDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cols[1].x + 4, y + 2);
 
     // Capacity
     setColor(doc, TEXT_SECONDARY);
-    doc.text(market.capacity.toLocaleString(), cols[2].x + 3, y + 2);
+    doc.text(market.capacity.toLocaleString(), cols[2].x + 4, y + 2);
 
     // Sold
-    doc.text(market.ticketsSold.toLocaleString(), cols[3].x + 3, y + 2);
+    doc.text(market.ticketsSold.toLocaleString(), cols[3].x + 4, y + 2);
 
     // % Sold
     setColor(doc, TEXT_PRIMARY);
-    doc.text(`${(market.pctSold * 100).toFixed(0)}%`, cols[4].x + 3, y + 2);
+    doc.text(`${(market.pctSold * 100).toFixed(0)}%`, cols[4].x + 4, y + 2);
 
     // Projected
-    doc.text(`${(market.prediction.blendedPredPct * 100).toFixed(0)}%`, cols[5].x + 3, y + 2);
+    doc.text(`${(market.prediction.blendedPredPct * 100).toFixed(0)}%`, cols[5].x + 4, y + 2);
 
     // Gap
     setColor(doc, market.prediction.gap > 0 ? ACCENT : TIER_GREEN);
-    doc.text(market.prediction.gap.toLocaleString(), cols[6].x + 3, y + 2);
+    doc.text(market.prediction.gap.toLocaleString(), cols[6].x + 4, y + 2);
 
-    // Tier — use short tier label, NOT the full pacing note
-    const shortTier = market.prediction.tier.startsWith('green')
-      ? 'Healthy'
-      : market.prediction.tier === 'yellow' ? 'Watch'
-      : market.prediction.tier === 'orange' ? 'Push'
-      : market.prediction.tier === 'red' ? 'Critical'
-      : market.prediction.tierLabel;
-    // Truncate to fit column width
-    const maxTierW = cols[7].w - 6;
-    let tierDisplay = shortTier;
-    doc.setFontSize(5);
-    while (doc.getTextWidth(tierDisplay) > maxTierW && tierDisplay.length > 3) {
-      tierDisplay = tierDisplay.slice(0, -1);
-    }
-    if (tierDisplay !== shortTier) tierDisplay += '…';
+    // Tier — short label
     setColor(doc, tierColor(market.prediction.tier));
-    doc.text(tierDisplay, cols[7].x + 3, y + 2);
+    doc.text(shortTierLabel(market.prediction.tier), cols[7].x + 4, y + 2);
 
     // Budget (first rate)
     setColor(doc, TEXT_SECONDARY);
     const budget = market.prediction.budgets[0];
-    doc.text(budget ? `$${budget.amount.toLocaleString()}` : '—', cols[8].x + 3, y + 2);
+    doc.text(budget ? `$${budget.amount.toLocaleString()}` : '—', cols[8].x + 4, y + 2);
 
     y += rowH;
   });
@@ -401,14 +408,15 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
   setColor(doc, TEXT_PRIMARY);
   doc.text(market.city.toUpperCase(), margin, y);
 
-  // ── Tier pill badge — short label, positioned on same line but after the city ──
+  // ── Tier pill badge — short label, centered text ──
   const tc = tierColor(market.prediction.tier);
   const tierText = shortTierLabel(market.prediction.tier).toUpperCase();
   // Measure city width at the heading font size
   const cityW = doc.getTextWidth(market.city.toUpperCase());
   doc.setFontSize(7);
   const tierTextW = doc.getTextWidth(tierText);
-  const badgeW = tierTextW + 10;
+  const badgePadX = 6;
+  const badgeW = tierTextW + badgePadX * 2;
   const badgeH = 7;
   const badgeX = margin + cityW + 8;
   const badgeY = y - 5.5;
@@ -420,9 +428,9 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
   setDraw(doc, tc);
   doc.setLineWidth(0.4);
   doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 3.5, 3.5, 'S');
-  // Badge text
+  // Badge text — centered horizontally and vertically
   setColor(doc, tc);
-  doc.text(tierText, badgeX + 5, badgeY + 5);
+  doc.text(tierText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1.5, { align: 'center' });
 
   y += 7;
 
