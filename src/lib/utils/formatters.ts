@@ -31,40 +31,47 @@ export function getStatusLabel(tier: string): string {
   }
 }
 
+/** Subtle monochrome badge — no bright tier fills */
 export function getStatusBadge(tier: string): string {
   switch (tier) {
     case 'green_sold_out':
     case 'green_on_pace':
-      return 'bg-tier-green/15 text-tier-green border border-tier-green/30';
+      return 'bg-surface-100 text-text-secondary border border-surface-200';
     case 'yellow':
-      return 'bg-tier-yellow/15 text-tier-yellow border border-tier-yellow/30';
+      return 'bg-surface-100 text-text-secondary border border-surface-200';
     case 'orange':
-      return 'bg-tier-orange/15 text-tier-orange border border-tier-orange/30';
+      return 'bg-surface-100 text-text-secondary border border-surface-200';
     case 'red':
-      return 'bg-tier-red/15 text-tier-red border border-tier-red/30';
+      return 'bg-surface-100 text-text-primary border border-surface-200';
     default:
       return 'bg-surface-100 text-text-muted border border-surface-200';
   }
 }
 
-export function tierBg(tier: string): string {
+/** Returns a tiny tier accent color for left-bar or dot — the only place tier color appears */
+export function tierAccentColor(tier: string): string {
   switch (tier) {
     case 'green_sold_out':
-    case 'green_on_pace': return 'bg-tier-green/10 border-tier-green/30';
-    case 'yellow': return 'bg-tier-yellow/10 border-tier-yellow/30';
-    case 'orange': return 'bg-tier-orange/10 border-tier-orange/30';
-    case 'red': return 'bg-tier-red/10 border-tier-red/30';
-    default: return 'bg-surface-100 border-surface-200';
+    case 'green_on_pace': return '#00E676';
+    case 'yellow': return '#FFD600';
+    case 'orange': return '#FF9100';
+    case 'red': return '#FF1744';
+    default: return '#333333';
   }
+}
+
+/** Bg class for tier — kept very subtle, just a border tint */
+export function tierBg(_tier: string): string {
+  return 'bg-surface-50/80 border-surface-200';
 }
 
 export function tierTextColor(tier: string): string {
   switch (tier) {
     case 'green_sold_out':
-    case 'green_on_pace': return 'text-tier-green';
-    case 'yellow': return 'text-tier-yellow';
-    case 'orange': return 'text-tier-orange';
-    case 'red': return 'text-tier-red';
+    case 'green_on_pace': return 'text-text-primary';
+    case 'yellow': return 'text-text-primary';
+    case 'orange': return 'text-text-primary';
+    case 'red': return 'text-text-primary';
     default: return 'text-text-primary';
   }
 }

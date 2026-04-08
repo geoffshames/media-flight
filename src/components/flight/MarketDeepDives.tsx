@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Market, BenchmarkData } from '@/lib/types/flight';
-import { formatNumber, formatPct, formatCurrency, tierBg, tierTextColor, getStatusLabel, getStatusBadge } from '@/lib/utils/formatters';
+import { formatNumber, formatPct, formatCurrency, getStatusLabel, tierAccentColor } from '@/lib/utils/formatters';
 
 import {
   BarChart,
@@ -38,11 +38,7 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
 
   const getTierOrder = (tier: string) => {
     const order: Record<string, number> = {
-      red: 0,
-      orange: 1,
-      yellow: 2,
-      green_on_pace: 3,
-      green_sold_out: 4,
+      red: 0, orange: 1, yellow: 2, green_on_pace: 3, green_sold_out: 4,
     };
     return order[tier] ?? 5;
   };
@@ -67,27 +63,23 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
 
   return (
     <motion.div
-
       initial="hidden"
       animate="visible"
       variants={fadeUp}
       className="space-y-4"
     >
-      {/* Show green toggle */}
       <button
         onClick={() => setShowGreen(!showGreen)}
-        className="px-4 py-2 rounded font-body text-sm bg-surface-100 text-text-secondary hover:bg-surface-200 transition-colors"
+        className="px-4 py-2 rounded text-[13px] font-body tracking-wide bg-surface-100 text-text-muted hover:text-text-secondary hover:bg-surface-200 transition-colors border border-surface-200"
       >
         {showGreen ? 'Hide' : 'Show'} Green Markets
       </button>
 
-      {/* Market cards */}
       <div className="space-y-3">
         <AnimatePresence mode="popLayout">
           {visibleMarkets.map((market) => {
             const marketId = `${market.city}-${market.showDate}`;
             const isExpanded = expandedMarkets.has(marketId);
-
             return (
               <MarketDeepDiveCard
                 key={marketId}
@@ -115,6 +107,7 @@ function MarketDeepDiveCard({
   onToggle: () => void;
   cptRates: number[];
 }) {
+  const accentColor = tierAccentColor(market.prediction.tier);
   const velocityData = [
     { name: 'Avg Weekly', value: market.avgWeeklyVelocity },
     { name: 'Recent Weekly', value: market.recentWeeklyVelocity },
@@ -127,54 +120,50 @@ function MarketDeepDiveCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className={`rounded-lg border overflow-hidden transition-colors ${tierBg(
-        market.prediction.tier
-      )} backdrop-blur-sm`}
+      className="relative rounded-xl border border-surface-200 bg-surface-50/60 overflow-hidden backdrop-blur-sm"
     >
+      {/* Thin left accent */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
+        style={{ backgroundColor: accentColor }}
+      />
+
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full text-left p-4 sm:p-6 hover:bg-white/2 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface"
+        className="w-full text-left p-5 pl-6 hover:bg-surface-100/30 transition-colors focus:outline-none"
       >
         <div className="flex justify-between items-start gap-4">
           <div>
-            <h3 className="font-heading text-lg sm:text-xl font-bold text-text-primary">
+            <h3 className="font-heading text-[17px] font-bold text-text-primary">
               {market.city}, {market.country}
             </h3>
-            <p className="text-xs sm:text-sm text-text-muted font-body mt-1">{market.venue}</p>
+            <p className="text-[13px] text-text-muted font-body mt-0.5">{market.venue}</p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                market.prediction.tier
-              )}`}
-            >
+            <span className="text-[11px] font-medium tracking-[0.08em] uppercase text-text-muted bg-surface-100 border border-surface-200 rounded px-2.5 py-1">
               {getStatusLabel(market.prediction.tier)}
-            </div>
+            </span>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
-              className="text-text-secondary"
+              className="text-text-muted text-[12px]"
             >
               ▼
             </motion.div>
           </div>
         </div>
 
-        {/* Summary line */}
-        <div className="mt-3 text-xs sm:text-sm text-text-secondary font-body space-y-1">
-          <p>
-            {formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)} •{' '}
-            <span className={tierTextColor(market.prediction.tier)}>
-              {formatPct(market.pctSold)}
-            </span>
-            {market.prediction.gap > 0 && (
-              <>
-                {' '}
-                • Gap: {formatNumber(market.prediction.gap)}
-              </>
-            )}
-          </p>
+        <div className="mt-2.5 text-[13px] text-text-muted font-body flex items-center gap-2">
+          <span>{formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}</span>
+          <span className="text-surface-300">·</span>
+          <span className="text-text-secondary font-medium">{formatPct(market.pctSold)}</span>
+          {market.prediction.gap > 0 && (
+            <>
+              <span className="text-surface-300">·</span>
+              <span>Gap: {formatNumber(market.prediction.gap)}</span>
+            </>
+          )}
         </div>
       </button>
 
@@ -188,37 +177,28 @@ function MarketDeepDiveCard({
             transition={{ duration: 0.3 }}
             className="border-t border-surface-200 overflow-hidden"
           >
-            <div className="p-4 sm:p-6 space-y-6">
-              {/* Status note */}
-              {market.pacingNote && (
-                <div>
-                  <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-2">
-                    Status
-                  </p>
-                  <p className="font-body text-sm text-text-secondary">{getStatusLabel(market.prediction.tier)}</p>
-                </div>
-              )}
-
+            <div className="p-5 pl-6 space-y-6">
               {/* Velocity chart */}
               <div>
-                <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-3">
+                <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3">
                   Velocity Analysis
                 </p>
-                <div className="h-40 bg-surface-100/50 rounded border border-surface-200 p-2">
+                <div className="h-36 border border-surface-200 rounded-lg p-2 bg-surface-100/30">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={velocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
-                      <XAxis dataKey="name" stroke="#71717A" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#71717A" tick={{ fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
+                      <XAxis dataKey="name" stroke="#71717A" tick={{ fontSize: 11, fill: '#71717A' }} />
+                      <YAxis stroke="#71717A" tick={{ fontSize: 11, fill: '#71717A' }} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#1A1A1A',
-                          border: '1px solid #333333',
-                          borderRadius: '4px',
+                          border: '1px solid #222222',
+                          borderRadius: '6px',
+                          fontSize: '13px',
                         }}
                         labelStyle={{ color: '#FAFAFA' }}
                       />
-                      <Bar dataKey="value" fill="#FD3737" radius={4} />
+                      <Bar dataKey="value" fill="#A1A1AA" radius={3} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -226,19 +206,19 @@ function MarketDeepDiveCard({
 
               {/* Budget by rate */}
               <div>
-                <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-3">
+                <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3">
                   Budget Requirements
                 </p>
                 <div className="space-y-2">
                   {market.prediction.budgets.map((budget) => (
                     <div
                       key={budget.rate}
-                      className="flex justify-between items-center p-2 bg-surface-100/50 rounded border border-surface-200/50"
+                      className="flex justify-between items-center p-3 border border-surface-200 rounded-lg bg-surface-100/30"
                     >
-                      <span className="font-body text-sm text-text-secondary">
-                        @ ${budget.rate} CPT:
+                      <span className="font-body text-[13px] text-text-muted">
+                        @ ${budget.rate} CPT
                       </span>
-                      <span className="font-semibold text-text-primary">
+                      <span className="font-heading text-[15px] font-bold text-text-primary">
                         {formatCurrency(budget.amount)}
                       </span>
                     </div>
@@ -247,44 +227,25 @@ function MarketDeepDiveCard({
               </div>
 
               {/* Prediction details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
-                    Current %
-                  </p>
-                  <p className={`font-heading text-lg font-bold ${tierTextColor(market.prediction.tier)}`}>
-                    {formatPct(market.pctSold)}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
-                    Predicted %
-                  </p>
-                  <p className="font-heading text-lg font-bold text-text-primary">
-                    {formatPct(market.prediction.blendedPredPct)}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
-                    Confidence
-                  </p>
-                  <p className="font-body text-sm font-semibold text-text-secondary capitalize">
-                    {market.prediction.confidence}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
-                    Trend
-                  </p>
-                  <p className="font-body text-sm font-semibold text-text-secondary capitalize">
-                    {market.velocityTrend.replace('_', ' ')}
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <DetailStat label="Current" value={formatPct(market.pctSold)} />
+                <DetailStat label="Predicted" value={formatPct(market.prediction.blendedPredPct)} />
+                <DetailStat label="Confidence" value={market.prediction.confidence} />
+                <DetailStat label="Trend" value={market.velocityTrend.replace('_', ' ')} />
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function DetailStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-1">{label}</p>
+      <p className="font-body text-[14px] font-medium text-text-secondary capitalize">{value}</p>
+    </div>
   );
 }

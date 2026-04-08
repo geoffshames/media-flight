@@ -4,7 +4,6 @@ import { FlightPlan } from '@/lib/types/flight';
 import { formatNumber, formatPct, formatCurrency } from '@/lib/utils/formatters';
 import { AnimatedNumber } from '@/components/common/AnimatedNumber';
 
-
 interface FlightHeroProps {
   data: FlightPlan;
 }
@@ -23,70 +22,45 @@ const stagger = {
 };
 
 export function FlightHero({ data }: FlightHeroProps) {
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'green_sold_out':
-      case 'green_on_pace':
-        return 'text-tier-green';
-      case 'yellow':
-        return 'text-tier-yellow';
-      case 'orange':
-        return 'text-tier-orange';
-      case 'red':
-        return 'text-tier-red';
-      default:
-        return 'text-text-primary';
-    }
-  };
-
-  const getTierCount = (tier: string) => {
-    switch (tier) {
-      case 'green':
-        return data.summary.tierCounts.green;
-      case 'yellow':
-        return data.summary.tierCounts.yellow;
-      case 'orange':
-        return data.summary.tierCounts.orange;
-      case 'red':
-        return data.summary.tierCounts.red;
-      default:
-        return 0;
-    }
-  };
+  const tierSummary = [
+    { count: data.summary.tierCounts.green, label: 'Sold Out' },
+    { count: data.summary.tierCounts.yellow, label: 'On Pace' },
+    { count: data.summary.tierCounts.orange, label: 'Needs Push' },
+    { count: data.summary.tierCounts.red, label: 'Critical' },
+  ].filter((t) => t.count > 0);
 
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={stagger}
-      className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-surface via-surface to-surface-100 pt-24 px-4 sm:px-6 lg:px-8"
+      className="relative min-h-screen w-full overflow-hidden bg-surface pt-24 px-4 sm:px-6 lg:px-8"
     >
-      {/* Accent orbs */}
-      <div className="absolute top-20 right-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-40 left-10 w-80 h-80 bg-accent/3 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle gradient orb */}
+      <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-accent/[0.03] rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Main heading */}
+        {/* Artist name */}
         <motion.div variants={fadeUp} className="mb-4">
-          <h1 className="font-heading text-6xl md:text-8xl font-bold text-text-primary leading-tight tracking-tight">
+          <h1 className="font-heading text-6xl md:text-8xl lg:text-[7rem] font-bold text-text-primary leading-[0.95] tracking-tight">
             {data.artist}
           </h1>
         </motion.div>
 
         {/* Tour info */}
-        <motion.div variants={fadeUp} className="mb-12">
-          <p className="font-body text-lg md:text-xl text-text-secondary mb-1">
+        <motion.div variants={fadeUp} className="mb-16">
+          <p className="font-body text-lg md:text-xl text-text-secondary font-light mb-1">
             {data.tourName}
           </p>
-          <p className="font-body text-sm md:text-base text-text-muted">
-            {data.legName} • {data.dateRange}
+          <p className="font-body text-sm text-text-muted">
+            {data.legName} · {data.dateRange}
           </p>
         </motion.div>
 
         {/* Stats grid */}
         <motion.div
           variants={stagger}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-16"
         >
           <StatCard
             label="Total Markets"
@@ -107,7 +81,7 @@ export function FlightHero({ data }: FlightHeroProps) {
             variants={fadeUp}
           />
           <StatCard
-            label="Sell-Through %"
+            label="Sell-Through"
             value={Math.round(data.summary.avgSellThrough * 1000) / 10}
             format={(n) => `${n.toFixed(1)}%`}
             variants={fadeUp}
@@ -119,55 +93,25 @@ export function FlightHero({ data }: FlightHeroProps) {
             variants={fadeUp}
           />
           <StatCard
-            label={`Recommended Budget (@ $${data.cptRates[0]} CPT)`}
-            value={
-              data.summary.budgetRecommendations[0]?.totalBudget || 0
-            }
+            label={`Budget (@ $${data.cptRates[0]} CPT)`}
+            value={data.summary.budgetRecommendations[0]?.totalBudget || 0}
             format={formatCurrency}
             variants={fadeUp}
+            accent
           />
         </motion.div>
 
-        {/* Tier summary */}
+        {/* Tier summary — minimal text only */}
         <motion.div
           variants={fadeUp}
-          className="flex flex-wrap gap-6 text-text-secondary font-body text-sm md:text-base"
+          className="flex flex-wrap gap-8 text-text-muted font-body text-[13px] tracking-wide"
         >
-          {getTierCount('green') > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-tier-green" />
-              <span>
-                <span className="text-tier-green font-semibold">{getTierCount('green')}</span> Sold
-                Out
-              </span>
-            </div>
-          )}
-          {getTierCount('yellow') > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-tier-yellow" />
-              <span>
-                <span className="text-tier-yellow font-semibold">{getTierCount('yellow')}</span> On
-                Pace
-              </span>
-            </div>
-          )}
-          {getTierCount('orange') > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-tier-orange" />
-              <span>
-                <span className="text-tier-orange font-semibold">{getTierCount('orange')}</span>{' '}
-                Needs Push
-              </span>
-            </div>
-          )}
-          {getTierCount('red') > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-tier-red" />
-              <span>
-                <span className="text-tier-red font-semibold">{getTierCount('red')}</span> Critical
-              </span>
-            </div>
-          )}
+          {tierSummary.map((t) => (
+            <span key={t.label}>
+              <span className="text-text-primary font-medium">{t.count}</span>{' '}
+              {t.label}
+            </span>
+          ))}
         </motion.div>
       </div>
     </motion.div>
@@ -179,15 +123,23 @@ interface StatCardProps {
   value: number;
   format: (n: number) => string;
   variants: any;
+  accent?: boolean;
 }
 
-function StatCard({ label, value, format, variants }: StatCardProps) {
+function StatCard({ label, value, format, variants, accent }: StatCardProps) {
   return (
-    <motion.div variants={variants} className="p-4 sm:p-6 rounded-lg border border-surface-200 bg-surface-50/40 backdrop-blur-sm">
-      <p className="font-body text-xs sm:text-sm text-text-muted mb-2 uppercase tracking-wider">
+    <motion.div
+      variants={variants}
+      className={`p-5 rounded-xl border backdrop-blur-sm ${
+        accent
+          ? 'border-accent/20 bg-accent/[0.04]'
+          : 'border-surface-200 bg-surface-50/60'
+      }`}
+    >
+      <p className="font-body text-[11px] text-text-muted mb-2.5 uppercase tracking-[0.12em]">
         {label}
       </p>
-      <p className="font-heading text-2xl sm:text-3xl font-bold text-text-primary">
+      <p className={`font-heading text-2xl sm:text-3xl font-bold ${accent ? 'text-text-primary' : 'text-text-primary'}`}>
         <AnimatedNumber value={value} format={format} />
       </p>
     </motion.div>

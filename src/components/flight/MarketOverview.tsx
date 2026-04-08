@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
-import { formatDate, formatPct, formatNumber, tierBg, tierTextColor, getStatusLabel, getStatusBadge } from '@/lib/utils/formatters';
-
-import { GlassCard } from '@/components/common/GlassCard';
+import { formatDate, formatPct, formatNumber, getStatusLabel, tierAccentColor } from '@/lib/utils/formatters';
 
 interface MarketOverviewProps {
   markets: Market[];
@@ -12,30 +10,25 @@ interface MarketOverviewProps {
 
 type SortBy = 'date' | 'gap' | 'tier' | 'pct';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-};
-
 const stagger = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0 },
+    transition: { staggerChildren: 0.04, delayChildren: 0 },
   },
 };
 
-export function MarketOverview({ markets }: MarketOverviewProps) {
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
 
+export function MarketOverview({ markets }: MarketOverviewProps) {
   const [sortBy, setSortBy] = useState<SortBy>('date');
 
   const getTierOrder = (tier: string) => {
     const order: Record<string, number> = {
-      red: 0,
-      orange: 1,
-      yellow: 2,
-      green_on_pace: 3,
-      green_sold_out: 4,
+      red: 0, orange: 1, yellow: 2, green_on_pace: 3, green_sold_out: 4,
     };
     return order[tier] ?? 5;
   };
@@ -57,7 +50,6 @@ export function MarketOverview({ markets }: MarketOverviewProps) {
 
   return (
     <motion.div
-
       initial="hidden"
       animate="visible"
       variants={stagger}
@@ -69,27 +61,27 @@ export function MarketOverview({ markets }: MarketOverviewProps) {
           <button
             key={sort}
             onClick={() => setSortBy(sort)}
-            className={`px-4 py-2 rounded font-body text-sm transition-colors ${
+            className={`px-4 py-2 rounded font-body text-[13px] tracking-wide transition-colors ${
               sortBy === sort
-                ? 'bg-accent text-surface font-semibold'
-                : 'bg-surface-100 text-text-secondary hover:bg-surface-200'
+                ? 'bg-text-primary text-surface font-medium'
+                : 'bg-surface-100 text-text-muted hover:text-text-secondary hover:bg-surface-200'
             }`}
           >
             {sort === 'date' && 'Date'}
             {sort === 'gap' && 'Gap'}
-            {sort === 'tier' && 'Tier'}
+            {sort === 'tier' && 'Status'}
             {sort === 'pct' && '% Sold'}
           </button>
         ))}
       </motion.div>
 
       {/* Market cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedMarkets.map((market, idx) => (
           <MarketCard
             key={`${market.city}-${market.showDate}`}
             market={market}
-            delay={idx * 0.05}
+            delay={idx * 0.04}
           />
         ))}
       </div>
@@ -101,89 +93,81 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
   const gap = market.prediction.gap;
   const gapPct = gap / market.capacity;
   const progressPct = Math.min(market.pctSold * 100, 100);
+  const accentColor = tierAccentColor(market.prediction.tier);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -3, transition: { duration: 0.25 } }}
+      className="relative rounded-xl border border-surface-200 bg-surface-50/60 backdrop-blur-sm overflow-hidden
+                 transition-all duration-300 hover:border-surface-300 hover:shadow-lg hover:shadow-black/20"
     >
-      <GlassCard
-        className={`border ${tierBg(market.prediction.tier)} h-full`}
-        hover
-        delay={delay}
-      >
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-heading text-lg sm:text-xl font-bold text-text-primary">
-                {market.city}
-              </h3>
-              <p className="text-xs sm:text-sm text-text-muted">{market.country}</p>
-            </div>
-            <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
-                market.prediction.tier
-              )}`}
-            >
-              {getStatusLabel(market.prediction.tier)}
-            </div>
-          </div>
+      {/* Thin left accent bar */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
+        style={{ backgroundColor: accentColor }}
+      />
 
-          {/* Venue and date */}
-          <div className="space-y-1">
-            <p className="text-xs sm:text-sm text-text-secondary font-body">{market.venue}</p>
-            <p className="text-xs text-text-muted font-body">{formatDate(market.showDate)}</p>
+      <div className="p-5 pl-6 space-y-4">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-heading text-[17px] font-bold text-text-primary leading-tight">
+              {market.city}
+            </h3>
+            <p className="text-[13px] text-text-muted mt-0.5">{market.venue}</p>
           </div>
+          <span className="text-[11px] font-medium tracking-[0.08em] uppercase text-text-muted bg-surface-100 border border-surface-200 rounded px-2.5 py-1">
+            {getStatusLabel(market.prediction.tier)}
+          </span>
+        </div>
 
-          {/* Capacity progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-text-muted font-body">
-                {formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}
-              </span>
-              <span className={`font-heading font-bold text-lg ${tierTextColor(market.prediction.tier)}`}>
-                {formatPct(market.pctSold)}
-              </span>
-            </div>
-            <div className="h-2 bg-surface-200 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPct}%` }}
-                transition={{ duration: 1.2, ease: 'easeOut' }}
-                className={`h-full ${
-                  market.prediction.tier === 'green_sold_out' ||
-                  market.prediction.tier === 'green_on_pace'
-                    ? 'bg-tier-green'
-                    : market.prediction.tier === 'yellow'
-                      ? 'bg-tier-yellow'
-                      : market.prediction.tier === 'orange'
-                        ? 'bg-tier-orange'
-                        : 'bg-tier-red'
-                }`}
-              />
-            </div>
-          </div>
-
-          {/* Gap info */}
-          {gap > 0 && (
-            <div className="pt-2 border-t border-surface-200">
-              <p className="text-xs text-text-muted font-body mb-1">Predicted Gap</p>
-              <p className="font-heading font-bold text-text-primary">
-                {formatNumber(gap)} tickets ({formatPct(gapPct)})
-              </p>
-            </div>
+        {/* Date + country */}
+        <div className="flex items-center gap-3 text-[13px] text-text-muted">
+          <span>{formatDate(market.showDate)}</span>
+          {market.country !== 'United Kingdom' && (
+            <>
+              <span className="text-surface-200">·</span>
+              <span>{market.country}</span>
+            </>
           )}
+          <span className="text-surface-200">·</span>
+          <span>{market.daysOut > 0 ? `${market.daysOut}d out` : 'Show day'}</span>
+        </div>
 
-          {/* Days out */}
-          <div className="pt-2 border-t border-surface-200">
-            <p className="text-xs text-text-muted font-body">
-              {market.daysOut > 0 ? `${market.daysOut} days out` : 'Show date'}
-            </p>
+        {/* Capacity bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-baseline">
+            <span className="text-[13px] text-text-muted font-body">
+              {formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}
+            </span>
+            <span className="font-heading text-lg font-bold text-text-primary">
+              {formatPct(market.pctSold)}
+            </span>
+          </div>
+          <div className="h-1.5 bg-surface-200 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 1.2, ease: 'easeOut', delay: delay + 0.2 }}
+              className="h-full rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
           </div>
         </div>
-      </GlassCard>
+
+        {/* Gap info */}
+        {gap > 0 && (
+          <div className="flex justify-between items-baseline pt-3 border-t border-surface-200/60">
+            <span className="text-[12px] text-text-muted uppercase tracking-wider">Gap</span>
+            <span className="text-[14px] font-medium text-text-secondary">
+              {formatNumber(gap)} tickets ({formatPct(gapPct)})
+            </span>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
