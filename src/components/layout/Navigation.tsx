@@ -7,11 +7,12 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image
-            src="/brand/CC-LOGO-2024-WHITE.png"
-            alt="CCD"
-            width={28}
-            height={28}
+            src="/brand/CC-LOGO-2025-PROFILE.png"
+            alt="Crowd Control Digital"
+            width={32}
+            height={32}
             priority
+            className="rounded-full"
           />
           <span className="font-heading text-[13px] tracking-[0.3em] text-text-primary uppercase">
             Media Flight
