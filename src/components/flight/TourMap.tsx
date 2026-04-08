@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
 
@@ -7,283 +7,360 @@ interface TourMapProps {
   markets: Market[];
 }
 
-// Mercator-projected coordinates for European cities
-// Mapped to a 1000x800 SVG viewBox covering roughly -12°W to 25°E, 36°N to 58°N
-const CITY_COORDS: Record<string, { x: number; y: number }> = {
-  Manchester:  { x: 395, y: 215 },
-  Birmingham:  { x: 400, y: 240 },
-  London:      { x: 415, y: 265 },
-  Brussels:    { x: 460, y: 265 },
-  Paris:       { x: 440, y: 310 },
-  Cologne:     { x: 500, y: 255 },
-  Utrecht:     { x: 475, y: 235 },
-  Berlin:      { x: 560, y: 220 },
-  Munich:      { x: 545, y: 310 },
-  Prague:      { x: 570, y: 275 },
-  Zurich:      { x: 500, y: 340 },
-  Milan:       { x: 510, y: 370 },
-  Madrid:      { x: 320, y: 490 },
-  Barcelona:   { x: 400, y: 460 },
+// Real lat/lng coordinates for European cities
+const CITY_COORDS: Record<string, [number, number]> = {
+  Manchester:  [-2.2426, 53.4808],
+  Birmingham:  [-1.8904, 52.4862],
+  London:      [-0.1276, 51.5074],
+  Brussels:    [4.3517, 50.8503],
+  Paris:       [2.3522, 48.8566],
+  Cologne:     [6.9603, 50.9375],
+  Utrecht:     [5.1214, 52.0907],
+  Berlin:      [13.4050, 52.5200],
+  Munich:      [11.5820, 48.1351],
+  Prague:      [14.4378, 50.0755],
+  Zurich:      [8.5417, 47.3769],
+  Milan:       [9.1900, 45.4642],
+  Madrid:      [-3.7038, 40.4168],
+  Barcelona:   [2.1734, 41.3851],
+  // US cities for benchmark (if ever needed)
+  Atlanta:     [-84.3880, 33.7490],
+  Boston:      [-71.0589, 42.3601],
+  'Washington DC': [-77.0369, 38.9072],
+  'New York':  [-74.0060, 40.7128],
+  Chicago:     [-87.6298, 41.8781],
+  Denver:      [-104.9903, 39.7392],
+  'San Francisco': [-122.4194, 37.7749],
+  'Los Angeles': [-118.2437, 34.0522],
+  Milwaukee:   [-87.9065, 43.0389],
+  Austin:      [-97.7431, 30.2672],
 };
 
-// Simplified European outline paths for visual context
-const EUROPE_PATHS = [
-  // British Isles
-  'M360,140 L380,120 L410,110 L430,130 L440,170 L435,200 L425,230 L440,260 L430,280 L410,285 L395,270 L380,280 L360,260 L355,230 L365,200 L350,170 Z',
-  // Ireland
-  'M310,160 L330,145 L350,155 L355,180 L345,210 L325,215 L310,195 L305,175 Z',
-  // France
-  'M390,290 L430,270 L470,265 L500,280 L520,310 L510,340 L490,370 L460,380 L420,400 L380,385 L360,370 L340,390 L330,370 L340,340 L350,310 L370,300 Z',
-  // Iberian Peninsula
-  'M280,400 L320,380 L350,370 L380,385 L420,400 L430,420 L420,460 L400,490 L370,510 L340,520 L300,520 L270,500 L260,470 L265,440 L275,420 Z',
-  // Germany / Central Europe
-  'M470,200 L510,185 L560,190 L600,200 L610,230 L600,260 L580,280 L550,290 L520,310 L500,280 L470,265 L460,240 Z',
-  // Italy
-  'M490,370 L510,340 L540,330 L560,350 L555,380 L540,410 L525,440 L510,460 L500,450 L505,420 L500,400 Z',
-  // Italy boot toe + Sicily
-  'M525,440 L540,460 L555,470 L545,480 L530,475 L520,460 Z',
-  // Scandinavia hint
-  'M470,80 L490,60 L520,50 L550,70 L560,100 L570,140 L560,180 L540,190 L520,185 L510,160 L500,130 L490,110 L475,100 Z',
-  // Poland / Eastern
-  'M560,190 L600,180 L640,190 L660,220 L650,260 L620,280 L600,260 L580,280 L560,260 L570,230 Z',
-  // Czech / Austria / Switzerland
-  'M500,280 L540,270 L580,280 L570,310 L540,330 L510,340 L500,320 Z',
-];
-
-const tierOrder: Record<string, number> = {
-  red: 0, orange: 1, yellow: 2, green_on_pace: 3, green_sold_out: 4,
-};
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 export function TourMap({ markets }: TourMapProps) {
-  const [hoveredCity, setHoveredCity] = useState<string | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  const mappedMarkets = useMemo(() => {
-    return markets
-      .filter((m) => CITY_COORDS[m.city])
-      .map((m) => ({
-        ...m,
-        coords: CITY_COORDS[m.city],
-      }))
-      .sort((a, b) => (tierOrder[a.prediction.tier] ?? 5) - (tierOrder[b.prediction.tier] ?? 5));
-  }, [markets]);
+  // Filter markets with known coordinates
+  const mappedMarkets = markets.filter((m) => CITY_COORDS[m.city]);
 
-  const activeCity = selectedCity || hoveredCity;
-  const activeMarket = activeCity ? mappedMarkets.find((m) => m.city === activeCity) : null;
+  // Compute map bounds from market coordinates
+  const getBounds = useCallback(() => {
+    const coords = mappedMarkets.map((m) => CITY_COORDS[m.city]);
+    if (coords.length === 0) return null;
+    const lngs = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
+    return [
+      [Math.min(...lngs) - 3, Math.min(...lats) - 2],
+      [Math.max(...lngs) + 3, Math.max(...lats) + 2],
+    ] as [[number, number], [number, number]];
+  }, [mappedMarkets]);
+
+  useEffect(() => {
+    if (!mapContainer.current || mapRef.current) return;
+
+    let cancelled = false;
+
+    // Dynamically import mapbox-gl to avoid SSR issues
+    import('mapbox-gl').then((mapboxgl) => {
+      if (cancelled || !mapContainer.current) return;
+
+      // @ts-ignore
+      mapboxgl.default.accessToken = MAPBOX_TOKEN;
+
+      const map = new mapboxgl.default.Map({
+        container: mapContainer.current!,
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [6, 48],
+        zoom: 3.5,
+        pitch: 0,
+        bearing: 0,
+        attributionControl: false,
+        interactive: true,
+      });
+
+      map.addControl(new mapboxgl.default.NavigationControl({ showCompass: false }), 'top-left');
+
+      map.on('load', () => {
+        if (cancelled) return;
+        mapRef.current = map;
+        setMapLoaded(true);
+
+        // Fit to market bounds
+        const bounds = getBounds();
+        if (bounds) {
+          map.fitBounds(bounds, { padding: 60, duration: 1500 });
+        }
+
+        // Add tour route line
+        const routeCoords = mappedMarkets
+          .sort((a, b) => a.showDate.localeCompare(b.showDate))
+          .map((m) => CITY_COORDS[m.city]);
+
+        if (routeCoords.length > 1) {
+          map.addSource('tour-route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: routeCoords,
+              },
+            },
+          });
+
+          map.addLayer({
+            id: 'tour-route-line',
+            type: 'line',
+            source: 'tour-route',
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round',
+            },
+            paint: {
+              'line-color': '#FD3737',
+              'line-width': 1.5,
+              'line-opacity': 0.25,
+              'line-dasharray': [4, 4],
+            },
+          });
+        }
+
+        // Add custom markers for each market
+        mappedMarkets.forEach((market) => {
+          const coords = CITY_COORDS[market.city];
+          if (!coords) return;
+
+          const color = market.prediction.tierColor;
+          const gap = market.prediction.gap;
+          const isRed = market.prediction.tier === 'red';
+          const isOrange = market.prediction.tier === 'orange';
+          const needsAttention = isRed || isOrange;
+
+          // Pin size based on gap
+          const size = gap > 500 ? 28 : gap > 100 ? 22 : 16;
+
+          // Create custom marker element
+          const el = document.createElement('div');
+          el.className = 'tour-marker';
+          el.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            background: ${color};
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 ${needsAttention ? '12' : '6'}px ${color}88;
+            position: relative;
+          `;
+
+          // Pulse ring for at-risk markets
+          if (needsAttention) {
+            const pulse = document.createElement('div');
+            pulse.style.cssText = `
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: ${size + 12}px;
+              height: ${size + 12}px;
+              border-radius: 50%;
+              border: 1.5px solid ${color};
+              animation: pulse-ring 2s ease-out infinite;
+              pointer-events: none;
+            `;
+            el.appendChild(pulse);
+          }
+
+          // City label
+          const label = document.createElement('div');
+          label.style.cssText = `
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: #D4D4D8;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+          `;
+          label.textContent = market.city;
+          el.appendChild(label);
+
+          // Hover effects
+          el.addEventListener('mouseenter', () => {
+            el.style.transform = 'scale(1.3)';
+            el.style.zIndex = '10';
+            el.style.borderColor = 'rgba(255,255,255,0.6)';
+            label.style.color = '#FAFAFA';
+            label.style.fontWeight = '600';
+            setSelectedMarket(market);
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.transform = 'scale(1)';
+            el.style.zIndex = '1';
+            el.style.borderColor = 'rgba(255,255,255,0.2)';
+            label.style.color = '#D4D4D8';
+            label.style.fontWeight = '500';
+          });
+          el.addEventListener('click', () => {
+            setSelectedMarket((prev) => prev?.city === market.city ? null : market);
+          });
+
+          const marker = new mapboxgl.default.Marker({ element: el, anchor: 'center' })
+            .setLngLat(coords)
+            .addTo(map);
+
+          markersRef.current.push(marker);
+        });
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="relative w-full">
+      {/* Inject pulse animation */}
+      <style jsx global>{`
+        @keyframes pulse-ring {
+          0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.8); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+        }
+        .mapboxgl-ctrl-group {
+          background: #1A1A1A !important;
+          border: 1px solid #333 !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+        }
+        .mapboxgl-ctrl-group button {
+          background: #1A1A1A !important;
+          border-color: #333 !important;
+        }
+        .mapboxgl-ctrl-group button:hover {
+          background: #2A2A2A !important;
+        }
+        .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+          filter: invert(1);
+        }
+      `}</style>
+
       {/* Map container */}
-      <div className="relative w-full aspect-[5/4] max-h-[600px]">
-        <svg
-          viewBox="220 40 500 520"
-          className="w-full h-full"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Europe outline */}
-          <g opacity="0.15">
-            {EUROPE_PATHS.map((d, i) => (
-              <path
-                key={i}
-                d={d}
-                fill="#D4D4D8"
-                stroke="#333333"
-                strokeWidth="1"
-              />
-            ))}
-          </g>
+      <div
+        ref={mapContainer}
+        className="w-full rounded-2xl overflow-hidden border border-surface-200"
+        style={{ height: '560px' }}
+      />
 
-          {/* Tour route lines connecting markets by date */}
-          <g>
-            {mappedMarkets.slice(0, -1).map((m, i) => {
-              const next = mappedMarkets[i + 1];
-              if (!next) return null;
-              return (
-                <line
-                  key={`route-${i}`}
-                  x1={m.coords.x}
-                  y1={m.coords.y}
-                  x2={next.coords.x}
-                  y2={next.coords.y}
-                  stroke="#FD3737"
-                  strokeWidth="1"
-                  strokeOpacity="0.15"
-                  strokeDasharray="4 4"
-                />
-              );
-            })}
-          </g>
+      {/* Loading state */}
+      {!mapLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-50 rounded-2xl">
+          <p className="text-text-muted font-body text-sm animate-pulse">Loading map...</p>
+        </div>
+      )}
 
-          {/* City markers — render green first so red/orange are on top */}
-          {[...mappedMarkets].reverse().map((m) => {
-            const isActive = m.city === activeCity;
-            const color = m.prediction.tierColor;
-            const gap = m.prediction.gap;
-            // Pin size based on gap — bigger gap = bigger pin
-            const baseR = gap > 500 ? 14 : gap > 100 ? 11 : 8;
-            const r = isActive ? baseR + 3 : baseR;
-
-            return (
-              <g
-                key={m.city}
-                onMouseEnter={() => setHoveredCity(m.city)}
-                onMouseLeave={() => setHoveredCity(null)}
-                onClick={() => setSelectedCity(selectedCity === m.city ? null : m.city)}
-                style={{ cursor: 'pointer' }}
+      {/* Info card */}
+      <AnimatePresence>
+        {selectedMarket && (
+          <motion.div
+            key={selectedMarket.city}
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-4 right-4 w-72 p-5 rounded-xl bg-surface-50/95 backdrop-blur-md border border-surface-200 shadow-xl shadow-black/40"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-heading text-lg font-bold text-text-primary">
+                  {selectedMarket.city}
+                </p>
+                <p className="font-body text-xs text-text-muted">
+                  {selectedMarket.venue}
+                </p>
+              </div>
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0"
+                style={{
+                  color: selectedMarket.prediction.tierColor,
+                  border: `1px solid ${selectedMarket.prediction.tierColor}44`,
+                  backgroundColor: `${selectedMarket.prediction.tierColor}11`,
+                }}
               >
-                {/* Outer pulse ring for at-risk markets */}
-                {(m.prediction.tier === 'red' || m.prediction.tier === 'orange') && (
-                  <circle
-                    cx={m.coords.x}
-                    cy={m.coords.y}
-                    r={baseR + 6}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="1"
-                    opacity="0.3"
-                  >
-                    <animate
-                      attributeName="r"
-                      from={String(baseR + 2)}
-                      to={String(baseR + 12)}
-                      dur="2s"
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      from="0.4"
-                      to="0"
-                      dur="2s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                )}
+                {selectedMarket.prediction.tier.replace('green_', '').replace('_', ' ')}
+              </span>
+            </div>
 
-                {/* Glow */}
-                <circle
-                  cx={m.coords.x}
-                  cy={m.coords.y}
-                  r={r + 4}
-                  fill={color}
-                  opacity={isActive ? 0.25 : 0.1}
-                />
-
-                {/* Main dot */}
-                <circle
-                  cx={m.coords.x}
-                  cy={m.coords.y}
-                  r={r}
-                  fill={color}
-                  opacity={isActive ? 1 : 0.85}
-                  stroke={isActive ? '#FAFAFA' : 'none'}
-                  strokeWidth={isActive ? 2 : 0}
-                />
-
-                {/* City label */}
-                <text
-                  x={m.coords.x}
-                  y={m.coords.y - r - 6}
-                  textAnchor="middle"
-                  fill={isActive ? '#FAFAFA' : '#D4D4D8'}
-                  fontSize={isActive ? '13' : '11'}
-                  fontWeight={isActive ? '600' : '400'}
-                  fontFamily="Work Sans, sans-serif"
-                  style={{ transition: 'all 0.2s' }}
-                >
-                  {m.city}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Hover tooltip / info card */}
-        <AnimatePresence>
-          {activeMarket && (
-            <motion.div
-              key={activeMarket.city}
-              initial={{ opacity: 0, y: 8, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-4 right-4 w-64 p-4 rounded-xl bg-surface-50/95 backdrop-blur-md border border-surface-200 shadow-xl shadow-black/30"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-heading text-lg font-bold text-text-primary">
-                    {activeMarket.city}
-                  </p>
-                  <p className="font-body text-xs text-text-muted">
-                    {activeMarket.venue}
-                  </p>
-                </div>
-                <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+            {/* Progress bar */}
+            <div className="mb-3">
+              <div className="flex justify-between text-xs font-body text-text-muted mb-1">
+                <span>{selectedMarket.ticketsSold.toLocaleString()} sold</span>
+                <span>{selectedMarket.capacity.toLocaleString()} cap</span>
+              </div>
+              <div className="h-2 rounded-full bg-surface-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    color: activeMarket.prediction.tierColor,
-                    borderColor: `${activeMarket.prediction.tierColor}44`,
-                    backgroundColor: `${activeMarket.prediction.tierColor}11`,
-                    border: '1px solid',
+                    width: `${Math.min(selectedMarket.pctSold * 100, 100)}%`,
+                    backgroundColor: selectedMarket.prediction.tierColor,
                   }}
-                >
-                  {activeMarket.prediction.tier.replace('green_', '').replace('_', ' ')}
-                </span>
+                />
               </div>
+            </div>
 
-              {/* Progress bar */}
-              <div className="mb-3">
-                <div className="flex justify-between text-xs font-body text-text-muted mb-1">
-                  <span>{activeMarket.ticketsSold.toLocaleString()} sold</span>
-                  <span>{activeMarket.capacity.toLocaleString()} cap</span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-200 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(activeMarket.pctSold * 100, 100)}%`,
-                      backgroundColor: activeMarket.prediction.tierColor,
-                    }}
-                  />
-                </div>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Sold</p>
+                <p className="text-sm font-bold text-text-primary font-heading">
+                  {Math.round(selectedMarket.pctSold * 100)}%
+                </p>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Sold</p>
-                  <p className="text-sm font-bold text-text-primary font-heading">
-                    {Math.round(activeMarket.pctSold * 100)}%
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Gap</p>
-                  <p className="text-sm font-bold text-text-primary font-heading">
-                    {activeMarket.prediction.gap.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Days Out</p>
-                  <p className="text-sm font-bold text-text-primary font-heading">
-                    {activeMarket.daysOut}
-                  </p>
-                </div>
+              <div>
+                <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Gap</p>
+                <p className="text-sm font-bold text-text-primary font-heading">
+                  {selectedMarket.prediction.gap.toLocaleString()}
+                </p>
               </div>
+              <div>
+                <p className="text-[10px] text-text-muted font-body uppercase tracking-wider">Days Out</p>
+                <p className="text-sm font-bold text-text-primary font-heading">
+                  {selectedMarket.daysOut}
+                </p>
+              </div>
+            </div>
 
-              {activeMarket.prediction.gap > 0 && (
-                <div className="mt-3 pt-3 border-t border-surface-200">
-                  <p className="text-[10px] text-text-muted font-body uppercase tracking-wider mb-1">Budget Needed</p>
-                  <p className="text-base font-bold font-heading" style={{ color: activeMarket.prediction.tierColor }}>
-                    ${activeMarket.prediction.budgets[0]?.amount.toLocaleString()}
-                    <span className="text-xs text-text-muted font-normal ml-1">
-                      @ ${activeMarket.prediction.budgets[0]?.rate}/ticket
-                    </span>
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            {selectedMarket.prediction.gap > 0 && (
+              <div className="mt-3 pt-3 border-t border-surface-200">
+                <p className="text-[10px] text-text-muted font-body uppercase tracking-wider mb-1">Budget Needed</p>
+                <p className="text-base font-bold font-heading" style={{ color: selectedMarket.prediction.tierColor }}>
+                  ${selectedMarket.prediction.budgets[0]?.amount.toLocaleString()}
+                  <span className="text-xs text-text-muted font-normal ml-1">
+                    @ ${selectedMarket.prediction.budgets[0]?.rate}/ticket
+                  </span>
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 font-body text-xs text-text-muted">
