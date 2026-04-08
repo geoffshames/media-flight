@@ -44,7 +44,7 @@ function renderAlert(alert: FlightAlert): string {
           </tr>
           <tr>
             <td style="padding-bottom:4px;">
-              <span style="font-size:16px;font-weight:700;color:#FAFAFA;">${alert.headline}</span>
+              <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#FAFAFA;">${alert.headline}</span>
             </td>
           </tr>
           <tr>
@@ -58,19 +58,19 @@ function renderAlert(alert: FlightAlert): string {
                 <tr>
                   <td style="padding-right:16px;">
                     <span style="font-size:11px;color:#666;">SOLD</span><br/>
-                    <span style="font-size:14px;font-weight:600;color:#E4E4E7;">${(alert.currentPct * 100).toFixed(0)}%</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#E4E4E7;">${(alert.currentPct * 100).toFixed(0)}%</span>
                   </td>
                   <td style="padding-right:16px;">
                     <span style="font-size:11px;color:#666;">PROJECTED</span><br/>
-                    <span style="font-size:14px;font-weight:600;color:#E4E4E7;">${(alert.predictedPct * 100).toFixed(0)}%</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#E4E4E7;">${(alert.predictedPct * 100).toFixed(0)}%</span>
                   </td>
                   <td style="padding-right:16px;">
                     <span style="font-size:11px;color:#666;">GAP</span><br/>
-                    <span style="font-size:14px;font-weight:600;color:#FD3737;">${alert.gap.toLocaleString()}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#FD3737;">${alert.gap.toLocaleString()}</span>
                   </td>
                   <td>
                     <span style="font-size:11px;color:#666;">DAYS OUT</span><br/>
-                    <span style="font-size:14px;font-weight:600;color:#E4E4E7;">${alert.daysOut}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#E4E4E7;">${alert.daysOut}</span>
                   </td>
                 </tr>
               </table>
@@ -93,14 +93,37 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
 
   const { tierCounts } = payload.summaryStats;
 
+  const brandBaseUrl = 'https://flight.crowdcontroldigital.com/brand';
+  const wordmarkUrl = `${brandBaseUrl}/CC-LOGO-2024-WHITE.png`;
+  const fontUrl = `${brandBaseUrl}/N27-Bold.otf`;
+
+  // N27 heading font family — works in Apple Mail, iOS, Samsung Mail, Thunderbird.
+  // Gmail, Outlook fall back to the system stack.
+  const headingFont = "'N27Bold', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+  const bodyFont = "'Work Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>${subjectLine}</title>
+  <style>
+    @font-face {
+      font-family: 'N27Bold';
+      src: url('${fontUrl}') format('opentype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Work Sans';
+      src: url('https://fonts.gstatic.com/s/worksans/v19/QGY_z_wNahGAdqQ43RhVcIgYT2Xz5u32K0nXBi8Jpg.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#050505;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:#050505;font-family:${bodyFont};">`;
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050505;">
     <tr>
       <td align="center" style="padding:24px 16px;">
@@ -112,10 +135,10 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
-                    <span style="font-size:10px;letter-spacing:0.35em;color:#FD3737;font-weight:600;">MEDIA FLIGHT ALERT</span>
+                    <span style="font-family:${headingFont};font-size:10px;letter-spacing:0.35em;color:#FD3737;font-weight:700;">MEDIA FLIGHT ALERT</span>
                   </td>
                   <td align="right">
-                    <span style="font-size:10px;letter-spacing:0.3em;color:#555;">CROWD CONTROL DIGITAL</span>
+                    <img src="${wordmarkUrl}" alt="Crowd Control Digital" height="18" style="height:18px;opacity:0.7;" />
                   </td>
                 </tr>
               </table>
@@ -125,12 +148,12 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
           <!-- Artist / Tour -->
           <tr>
             <td style="padding:28px 20px 12px;">
-              <span style="font-size:28px;font-weight:800;color:#FAFAFA;text-transform:uppercase;letter-spacing:-0.01em;">${payload.artist}</span>
+              <span style="font-family:${headingFont};font-size:28px;font-weight:700;color:#FAFAFA;text-transform:uppercase;letter-spacing:-0.01em;">${payload.artist}</span>
             </td>
           </tr>
           <tr>
             <td style="padding:0 20px 20px;">
-              <span style="font-size:15px;color:#E4E4E7;">${payload.tourName}</span>
+              <span style="font-family:${headingFont};font-size:15px;color:#E4E4E7;">${payload.tourName}</span>
               ${payload.legName ? `<span style="color:#FD3737;margin:0 8px;">·</span><span style="font-size:15px;color:#888;">${payload.legName}</span>` : ''}
             </td>
           </tr>
@@ -165,7 +188,7 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
           <!-- Tour health summary -->
           <tr>
             <td style="padding:24px 20px;">
-              <span style="font-size:10px;letter-spacing:0.2em;color:#666;font-weight:600;">TOUR HEALTH</span>
+              <span style="font-family:${headingFont};font-size:10px;letter-spacing:0.2em;color:#666;font-weight:700;">TOUR HEALTH</span>
             </td>
           </tr>
           <tr>
@@ -174,23 +197,23 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
                 <tr>
                   <td style="padding-right:24px;">
                     <span style="font-size:11px;color:#666;">SELL-THROUGH</span><br/>
-                    <span style="font-size:22px;font-weight:700;color:#FAFAFA;">${(payload.summaryStats.overallSellThrough * 100).toFixed(0)}%</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#FAFAFA;">${(payload.summaryStats.overallSellThrough * 100).toFixed(0)}%</span>
                   </td>
                   <td style="padding-right:24px;">
                     <span style="font-size:11px;color:#00E676;">● HEALTHY</span><br/>
-                    <span style="font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.green}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.green}</span>
                   </td>
                   <td style="padding-right:24px;">
                     <span style="font-size:11px;color:#FFD600;">● WATCH</span><br/>
-                    <span style="font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.yellow}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.yellow}</span>
                   </td>
                   <td style="padding-right:24px;">
                     <span style="font-size:11px;color:#FF9100;">● PUSH</span><br/>
-                    <span style="font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.orange}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.orange}</span>
                   </td>
                   <td>
                     <span style="font-size:11px;color:#FF1744;">● CRITICAL</span><br/>
-                    <span style="font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.red}</span>
+                    <span style="font-family:'N27Bold','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#FAFAFA;">${tierCounts.red}</span>
                   </td>
                 </tr>
               </table>
@@ -200,7 +223,7 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
           <!-- CTA -->
           <tr>
             <td align="center" style="padding:0 20px 32px;">
-              <a href="${payload.dashboardUrl}" style="display:inline-block;padding:12px 32px;background:#FD3737;color:#FFFFFF;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;border-radius:6px;">
+              <a href="${payload.dashboardUrl}" style="display:inline-block;padding:12px 32px;background:#FD3737;color:#FFFFFF;text-decoration:none;font-family:${headingFont};font-size:13px;font-weight:700;letter-spacing:0.1em;border-radius:6px;">
                 VIEW DASHBOARD →
               </a>
             </td>
@@ -211,8 +234,9 @@ export function buildAlertEmailHtml(payload: AlertPayload): string {
             <td style="padding:20px;border-top:1px solid #1E1E1E;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td>
-                    <span style="font-size:11px;color:#444;">Powered by Media Flight · Crowd Control Digital</span>
+                  <td valign="middle">
+                    <span style="font-size:11px;color:#444;">Powered by</span>
+                    <img src="${wordmarkUrl}" alt="Crowd Control Digital" height="12" style="height:12px;vertical-align:middle;margin-left:4px;opacity:0.5;" />
                   </td>
                   <td align="right">
                     <span style="font-size:11px;color:#444;">
