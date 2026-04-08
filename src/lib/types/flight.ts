@@ -6,6 +6,7 @@ export interface FlightPlan {
   dateRange: string;
   generatedDate: string;
   accentColor?: string;
+  password?: string;                 // Simple access password for this flight plan
   summary: FlightSummary;
   cptRates: number[];
   markets: Market[];

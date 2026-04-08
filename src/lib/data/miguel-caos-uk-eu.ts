@@ -8,6 +8,7 @@ export const miguelCaosUkEu: FlightPlan = {
   dateRange: 'Apr 13 – May 5, 2026',
   generatedDate: '2026-04-07',
   accentColor: '#FF1744',
+  password: 'caos2026',
   summary: {
     totalMarkets: 14,
     totalCapacity: 31263,

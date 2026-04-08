@@ -14,6 +14,7 @@ import { PredictionModel } from '@/components/flight/PredictionModel';
 import { SectionDivider } from '@/components/common/SectionDivider';
 import { TourMap } from '@/components/flight/TourMap';
 import { UploadWidget } from '@/components/flight/UploadWidget';
+import { PasswordGate } from '@/components/flight/PasswordGate';
 
 interface FlightClientProps {
   flight: FlightPlan;
@@ -46,10 +47,25 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
 }
 
 export function FlightClient({ flight }: FlightClientProps) {
-  return (
+  const content = (
     <FlightDataProvider initialData={flight}>
       <FlightClientInner />
     </FlightDataProvider>
+  );
+
+  // If no password set, show the dashboard directly
+  if (!flight.password) return content;
+
+  return (
+    <PasswordGate
+      slug={flight.slug}
+      artist={flight.artist}
+      tourName={flight.tourName}
+      legName={flight.legName}
+      passwordHash={flight.password}
+    >
+      {content}
+    </PasswordGate>
   );
 }
 
