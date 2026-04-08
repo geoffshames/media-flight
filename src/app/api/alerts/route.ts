@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'alerts@crowdcontroldigital.com';
+    // Allow payload override for testing; fall back to env var or default
+    const fromAddress = (payload as Record<string, unknown>).fromOverride as string
+      || process.env.RESEND_FROM_EMAIL
+      || 'alerts@crowdcontroldigital.com';
     const html = buildAlertEmailHtml(payload);
     const subject = buildAlertSubject(payload);
 
