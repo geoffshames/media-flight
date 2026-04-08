@@ -5,22 +5,27 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ['N27', 'sans-serif'],
+        heading: ['N27Bold', 'sans-serif'],
         body: ['Work Sans', 'sans-serif'],
       },
       colors: {
         surface: {
-          DEFAULT: '#141414',
-          50: '#1A1A1A',
-          100: '#262626',
-          200: '#333333',
+          DEFAULT: '#0A0A0A',
+          50: '#111111',
+          100: '#1A1A1A',
+          200: '#222222',
+          300: '#2A2A2A',
+        },
+        accent: {
+          DEFAULT: '#FD3737',
+          light: '#FF5555',
+          dark: '#CC2222',
         },
         text: {
           primary: '#FAFAFA',
-          secondary: '#E4E4E9',
-          muted: '#B8B8C0',
+          secondary: '#A1A1AA',
+          muted: '#71717A',
         },
-        accent: '#FD3737',
         tier: {
           green: '#00E676',
           yellow: '#FFD600',

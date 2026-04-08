@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
-import { formatDate, formatPct, formatNumber, tierBg, tierTextColor } from '@/lib/utils/formatters';
+import { formatDate, formatPct, formatNumber, tierBg, tierTextColor, getStatusLabel, getStatusBadge } from '@/lib/utils/formatters';
 
 import { GlassCard } from '@/components/common/GlassCard';
 
@@ -14,7 +14,7 @@ type SortBy = 'date' | 'gap' | 'tier' | 'pct';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -26,7 +26,7 @@ const stagger = {
 };
 
 export function MarketOverview({ markets }: MarketOverviewProps) {
-  
+
   const [sortBy, setSortBy] = useState<SortBy>('date');
 
   const getTierOrder = (tier: string) => {
@@ -57,7 +57,7 @@ export function MarketOverview({ markets }: MarketOverviewProps) {
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={stagger}
@@ -106,7 +106,7 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       <GlassCard
         className={`border ${tierBg(market.prediction.tier)} h-full`}
@@ -117,17 +117,17 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
           {/* Header */}
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-display text-lg sm:text-xl font-bold text-text-primary">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-text-primary">
                 {market.city}
               </h3>
               <p className="text-xs sm:text-sm text-text-muted">{market.country}</p>
             </div>
             <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${tierBg(
+              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
                 market.prediction.tier
               )}`}
             >
-              {market.prediction.tierLabel}
+              {getStatusLabel(market.prediction.tier)}
             </div>
           </div>
 
@@ -143,7 +143,7 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
               <span className="text-xs text-text-muted font-body">
                 {formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}
               </span>
-              <span className={`font-display font-bold text-lg ${tierTextColor(market.prediction.tier)}`}>
+              <span className={`font-heading font-bold text-lg ${tierTextColor(market.prediction.tier)}`}>
                 {formatPct(market.pctSold)}
               </span>
             </div>
@@ -170,7 +170,7 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
           {gap > 0 && (
             <div className="pt-2 border-t border-surface-200">
               <p className="text-xs text-text-muted font-body mb-1">Predicted Gap</p>
-              <p className="font-display font-bold text-text-primary">
+              <p className="font-heading font-bold text-text-primary">
                 {formatNumber(gap)} tickets ({formatPct(gapPct)})
               </p>
             </div>

@@ -64,7 +64,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 3013, pctSold: 0.897, daysOut: 13 },
         { date: '2026-04-07', ticketsSold: 3348, pctSold: 0.996, daysOut: 6 },
       ],
-      pacingNote: 'Virtually sold out',
+      pacingNote: 'SOLD OUT',
     },
     {
       showDate: '2026-04-14',
@@ -103,7 +103,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 2262, pctSold: 0.795, daysOut: 14 },
         { date: '2026-04-07', ticketsSold: 2750, pctSold: 0.966, daysOut: 7 },
       ],
-      pacingNote: 'On pace — 119/wk velocity closing gap',
+      pacingNote: 'ON PACE',
     },
     {
       showDate: '2026-04-16',
@@ -182,7 +182,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 931, pctSold: 0.668, daysOut: 19 },
         { date: '2026-04-07', ticketsSold: 1131, pctSold: 0.811, daysOut: 12 },
       ],
-      pacingNote: 'Strong velocity (50/wk) — should close',
+      pacingNote: 'ON PACE',
     },
     {
       showDate: '2026-04-20',
@@ -222,7 +222,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 2287, pctSold: 0.839, daysOut: 20 },
         { date: '2026-04-07', ticketsSold: 2677, pctSold: 0.983, daysOut: 13 },
       ],
-      pacingNote: 'Near sellout — minimal push needed',
+      pacingNote: 'ON PACE',
     },
     {
       showDate: '2026-04-23',
@@ -261,7 +261,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 1245, pctSold: 0.778, daysOut: 23 },
         { date: '2026-04-07', ticketsSold: 1555, pctSold: 0.972, daysOut: 16 },
       ],
-      pacingNote: 'On pace to sell through',
+      pacingNote: 'ON PACE',
     },
     {
       showDate: '2026-04-24',
@@ -301,7 +301,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 1549, pctSold: 0.79, daysOut: 24 },
         { date: '2026-04-07', ticketsSold: 1900, pctSold: 0.94, daysOut: 17 },
       ],
-      pacingNote: 'Low velocity but small gap — will close',
+      pacingNote: 'ON PACE',
     },
     {
       showDate: '2026-04-26',
@@ -341,7 +341,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 893, pctSold: 0.558, daysOut: 26 },
         { date: '2026-04-07', ticketsSold: 1203, pctSold: 0.752, daysOut: 19 },
       ],
-      pacingNote: '64/wk recent vel — accelerating but needs push',
+      pacingNote: 'NEEDS PUSH',
     },
     {
       showDate: '2026-04-27',
@@ -381,7 +381,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 793, pctSold: 0.566, daysOut: 27 },
         { date: '2026-04-07', ticketsSold: 1030, pctSold: 0.736, daysOut: 20 },
       ],
-      pacingNote: '68/wk recent vel — similar to Berlin profile',
+      pacingNote: 'NEEDS PUSH',
     },
     {
       showDate: '2026-04-29',
@@ -421,7 +421,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 504, pctSold: 0.255, daysOut: 29 },
         { date: '2026-04-07', ticketsSold: 653, pctSold: 0.33, daysOut: 22 },
       ],
-      pacingNote: '33% sold w/ 3 wks left — critical market',
+      pacingNote: 'CRITICAL',
     },
     {
       showDate: '2026-04-30',
@@ -460,7 +460,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 1173, pctSold: 0.782, daysOut: 30 },
         { date: '2026-04-07', ticketsSold: 1509, pctSold: 1.006, daysOut: 23 },
       ],
-      pacingNote: 'SOLD OUT (oversold)',
+      pacingNote: 'SOLD OUT',
     },
     {
       showDate: '2026-05-02',
@@ -500,7 +500,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 355, pctSold: 0.19, daysOut: 32 },
         { date: '2026-04-07', ticketsSold: 470, pctSold: 0.251, daysOut: 25 },
       ],
-      pacingNote: '25% sold — needs massive intervention',
+      pacingNote: 'CRITICAL',
     },
     {
       showDate: '2026-05-04',
@@ -540,7 +540,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 475, pctSold: 0.238, daysOut: 34 },
         { date: '2026-04-07', ticketsSold: 661, pctSold: 0.331, daysOut: 27 },
       ],
-      pacingNote: '33% sold — velocity only 18/wk',
+      pacingNote: 'CRITICAL',
     },
     {
       showDate: '2026-05-05',
@@ -580,7 +580,7 @@ export const miguelCaosUkEu: FlightPlan = {
         { date: '2026-03-31', ticketsSold: 567, pctSold: 0.246, daysOut: 35 },
         { date: '2026-04-07', ticketsSold: 762, pctSold: 0.331, daysOut: 28 },
       ],
-      pacingNote: '33% sold — 34/wk recent but need 384/wk',
+      pacingNote: 'CRITICAL',
     },
   ],
   benchmark: {

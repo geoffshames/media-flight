@@ -10,7 +10,7 @@ interface PredictionModelProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -22,7 +22,6 @@ const stagger = {
 };
 
 export function PredictionModel({ markets }: PredictionModelProps) {
-  
 
   // Filter to non-green markets
   const riskMarkets = markets.filter(
@@ -57,13 +56,13 @@ export function PredictionModel({ markets }: PredictionModelProps) {
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={stagger}
       className="space-y-6"
     >
-      <motion.h2 variants={fadeUp} className="font-display text-3xl md:text-4xl font-bold text-text-primary">
+      <motion.h2 variants={fadeUp} className="font-heading text-3xl md:text-4xl font-bold text-text-primary">
         Predictions
       </motion.h2>
 
@@ -115,13 +114,13 @@ function PredictionCard({ market, delay }: { market: Market; delay: number }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
       className="p-4 sm:p-6 rounded-lg border border-surface-200 bg-surface-50/40 backdrop-blur-sm space-y-4"
     >
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-display font-bold text-text-primary text-lg">
+          <h3 className="font-heading font-bold text-text-primary text-lg">
             {market.city}
           </h3>
           <p className="text-xs text-text-muted font-body">{market.venue}</p>
@@ -195,19 +194,19 @@ function PredictionCard({ market, delay }: { market: Market; delay: number }) {
       <div className="grid grid-cols-3 gap-2">
         <div className="p-2 bg-surface-100 rounded border border-surface-200">
           <p className="text-xs text-text-muted font-body mb-1">Current</p>
-          <p className="font-display font-bold text-text-primary">
+          <p className="font-heading font-bold text-text-primary">
             {formatPct(market.pctSold)}
           </p>
         </div>
         <div className="p-2 bg-surface-100 rounded border border-surface-200">
           <p className="text-xs text-text-muted font-body mb-1">Predicted</p>
-          <p className="font-display font-bold text-accent">
+          <p className="font-heading font-bold text-accent">
             {formatPct(market.prediction.blendedPredPct)}
           </p>
         </div>
         <div className="p-2 bg-surface-100 rounded border border-surface-200">
           <p className="text-xs text-text-muted font-body mb-1">Trend</p>
-          <p className="font-display font-bold text-text-primary">
+          <p className="font-heading font-bold text-text-primary">
             {getTrendIcon(market.velocityTrend)}
           </p>
         </div>

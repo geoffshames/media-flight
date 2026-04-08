@@ -1,56 +1,83 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500;600;700&display=swap');
 
 @font-face {
-  font-family: 'N27';
+  font-family: 'N27Bold';
   src: url('/brand/N27-Bold.otf') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --bg: #0A0A0A;
-  --text-primary: #FAFAFA;
-  --text-secondary: #E4E4E9;
-  --text-muted: #B8B8C0;
   --accent: #FD3737;
-  --surface: #141414;
-  --surface-50: #1A1A1A;
-  --surface-100: #262626;
-  --surface-200: #333333;
-  --tier-green: #00E676;
-  --tier-yellow: #FFD600;
-  --tier-orange: #FF9100;
-  --tier-red: #FF1744;
+  --bg: #0A0A0A;
+  --text: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+}
+
+* {
+  @apply antialiased;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text-primary);
+  @apply bg-[#0A0A0A] text-[#FAFAFA] antialiased;
   font-family: 'Work Sans', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  line-height: 1.7;
 }
 
 ::selection {
-  background: rgba(253, 55, 55, 0.3);
-  color: #FAFAFA;
+  @apply bg-[#FD3737]/30 text-white;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  @apply bg-transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 3px;
+  @apply bg-[#333333] rounded-full;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #FD3737;
+  @apply bg-[#555555];
+}
+
+* {
+  scrollbar-color: #333333 transparent;
+  scrollbar-width: thin;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+a, button {
+  @apply transition-all duration-300;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

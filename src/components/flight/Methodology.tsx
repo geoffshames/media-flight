@@ -10,7 +10,7 @@ interface MethodologyProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -22,17 +22,16 @@ const stagger = {
 };
 
 export function Methodology({ methodology }: MethodologyProps) {
-  
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={stagger}
       className="space-y-6 max-w-4xl"
     >
-      <motion.h2 variants={fadeUp} className="font-display text-3xl md:text-4xl font-bold text-text-primary">
+      <motion.h2 variants={fadeUp} className="font-heading text-3xl md:text-4xl font-bold text-text-primary">
         Methodology
       </motion.h2>
 
@@ -86,22 +85,28 @@ export function Methodology({ methodology }: MethodologyProps) {
 
       {/* Confidence explanation */}
       <motion.div variants={fadeUp} className="space-y-4">
-        <h3 className="font-display text-lg font-bold text-text-primary">Confidence Scoring</h3>
+        <h3 className="font-heading text-lg font-bold text-text-primary">Confidence Scoring</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <ConfidenceLevel
             level="High"
             description="12+ weeks of data, clear trend"
-            color="tier-green"
+            color="bg-tier-green/20"
+            border="border-tier-green/30"
+            text="text-tier-green"
           />
           <ConfidenceLevel
             level="Medium"
             description="8-11 weeks of data, mixed signals"
-            color="tier-yellow"
+            color="bg-tier-yellow/20"
+            border="border-tier-yellow/30"
+            text="text-tier-yellow"
           />
           <ConfidenceLevel
             level="Low"
             description="Less than 8 weeks, high volatility"
-            color="tier-red"
+            color="bg-tier-red/20"
+            border="border-tier-red/30"
+            text="text-tier-red"
           />
         </div>
       </motion.div>
@@ -125,7 +130,7 @@ function ParameterCard({
       <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-2">
         {label}
       </p>
-      <p className="font-display text-2xl font-bold text-accent mb-1">
+      <p className="font-heading text-2xl font-bold text-accent mb-1">
         {value}
       </p>
       <p className="font-body text-xs text-text-muted">{description}</p>
@@ -137,14 +142,18 @@ function ConfidenceLevel({
   level,
   description,
   color,
+  border,
+  text,
 }: {
   level: string;
   description: string;
   color: string;
+  border: string;
+  text: string;
 }) {
   return (
-    <div className={`p-4 rounded-lg border border-${color}/30 bg-${color}/10 backdrop-blur-sm`}>
-      <p className={`font-semibold text-text-${color} mb-1`}>{level}</p>
+    <div className={`p-4 rounded-lg border ${border} ${color} backdrop-blur-sm`}>
+      <p className={`font-semibold ${text} mb-1`}>{level}</p>
       <p className="font-body text-xs text-text-muted">{description}</p>
     </div>
   );

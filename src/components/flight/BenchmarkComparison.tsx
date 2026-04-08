@@ -4,14 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BenchmarkData } from '@/lib/types/flight';
 import { formatPct, formatNumber } from '@/lib/utils/formatters';
 
-
 interface BenchmarkComparisonProps {
   benchmark: BenchmarkData;
 }
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -23,12 +22,10 @@ const stagger = {
 };
 
 export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
-  
   const [expandedShow, setExpandedShow] = useState<string | null>(null);
 
   return (
     <motion.div
-      
       initial="hidden"
       animate="visible"
       variants={stagger}
@@ -56,7 +53,7 @@ export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
         />
       </div>
 
-      {/* Pacing table */}
+      {/* Pacing benchmarks table */}
       <motion.div variants={fadeUp} className="overflow-x-auto">
         <div className="min-w-full">
           <table className="w-full font-body text-sm">
@@ -80,26 +77,26 @@ export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
               </tr>
             </thead>
             <tbody>
-              {benchmark.pacingBenchmarks.map((benchmark, idx) => (
+              {benchmark.pacingBenchmarks.map((pb, idx) => (
                 <tr
                   key={idx}
-                  className="border-b border-surface-200 hover:bg-surface-50/50 transition-colors"
+                  className="border-b border-surface-100 hover:bg-surface-50/40 transition-colors"
                 >
                   <td className="py-3 px-4">
-                    <p className="font-semibold text-text-primary">{benchmark.milestone}</p>
-                    <p className="text-xs text-text-muted">{benchmark.daysOut} days out</p>
+                    <p className="font-semibold text-text-primary">{pb.milestone}</p>
+                    <p className="text-xs text-text-muted">{pb.daysOut} days out</p>
                   </td>
                   <td className="text-center py-3 px-4 text-text-primary font-semibold">
-                    {formatPct(benchmark.allShowsMedian)}
-                  </td>
-                  <td className="text-center py-3 px-4 text-text-primary">
-                    {formatPct(benchmark.allShowsMean)}
-                  </td>
-                  <td className="text-center py-3 px-4 text-tier-green font-semibold">
-                    {benchmark.soldOutMedian ? formatPct(benchmark.soldOutMedian) : '—'}
+                    {formatPct(pb.allShowsMedian)}
                   </td>
                   <td className="text-center py-3 px-4 text-text-secondary">
-                    {benchmark.notSoldOutMedian ? formatPct(benchmark.notSoldOutMedian) : '—'}
+                    {formatPct(pb.allShowsMean)}
+                  </td>
+                  <td className="text-center py-3 px-4 text-tier-green font-semibold">
+                    {pb.soldOutMedian ? formatPct(pb.soldOutMedian) : '—'}
+                  </td>
+                  <td className="text-center py-3 px-4 text-text-secondary">
+                    {pb.notSoldOutMedian ? formatPct(pb.notSoldOutMedian) : '—'}
                   </td>
                 </tr>
               ))}
@@ -110,7 +107,7 @@ export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
 
       {/* Multiplier table */}
       <motion.div variants={fadeUp} className="space-y-4">
-        <h3 className="font-display text-lg font-bold text-text-primary">Day-Out Multipliers</h3>
+        <h3 className="font-heading text-lg font-bold text-text-primary">Day-Out Multipliers</h3>
         <div className="overflow-x-auto">
           <table className="w-full font-body text-sm">
             <thead>
@@ -130,7 +127,7 @@ export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
               {benchmark.multipliers.map((multiplier, idx) => (
                 <tr
                   key={idx}
-                  className="border-b border-surface-200 hover:bg-surface-50/50 transition-colors"
+                  className="border-b border-surface-100 hover:bg-surface-50/40 transition-colors"
                 >
                   <td className="py-3 px-4 font-semibold text-text-primary">
                     {multiplier.daysOut} days
@@ -148,10 +145,10 @@ export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
         </div>
       </motion.div>
 
-      {/* Individual shows */}
+      {/* Historical shows */}
       {benchmark.shows.length > 0 && (
         <motion.div variants={fadeUp} className="space-y-4">
-          <h3 className="font-display text-lg font-bold text-text-primary">Historical Shows</h3>
+          <h3 className="font-heading text-lg font-bold text-text-primary">Historical Shows</h3>
           <div className="space-y-3">
             {benchmark.shows.map((show, idx) => (
               <BenchmarkShowCard
@@ -180,13 +177,12 @@ function SummaryCard({
   variants: any;
 }) {
   return (
-    <motion.div variants={variants} className="p-4 sm:p-6 rounded-lg border border-surface-200 bg-surface-50/40 backdrop-blur-sm">
-      <p className="font-body text-xs sm:text-sm text-text-muted mb-2 uppercase tracking-wider">
-        {label}
-      </p>
-      <p className="font-display text-2xl sm:text-3xl font-bold text-text-primary">
-        {format(value)}
-      </p>
+    <motion.div
+      variants={variants}
+      className="p-5 rounded-xl border border-surface-200 bg-surface-50/80 backdrop-blur-sm"
+    >
+      <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-2">{label}</p>
+      <p className="font-heading text-2xl font-bold text-text-primary">{format(value)}</p>
     </motion.div>
   );
 }
@@ -210,15 +206,15 @@ function BenchmarkShowCard({
   return (
     <motion.div
       layout
-      className="rounded-lg border border-surface-200 bg-surface-50/40 overflow-hidden backdrop-blur-sm"
+      className="rounded-xl border border-surface-200 bg-surface-50/80 overflow-hidden backdrop-blur-sm"
     >
       <button
         onClick={onToggle}
-        className="w-full text-left p-4 hover:bg-white/2 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface"
+        className="w-full text-left p-4 hover:bg-surface-100/50 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface"
       >
         <div className="flex justify-between items-start gap-4">
           <div>
-            <h4 className="font-display font-bold text-text-primary">
+            <h4 className="font-heading font-bold text-text-primary">
               {show.city}
               {show.soldOut && (
                 <span className="ml-2 inline text-xs font-body text-tier-green">SOLD OUT</span>

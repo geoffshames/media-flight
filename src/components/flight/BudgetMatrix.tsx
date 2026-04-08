@@ -19,7 +19,7 @@ interface BudgetMatrixProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -31,7 +31,6 @@ const stagger = {
 };
 
 export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
-  
 
   // Only markets with gaps
   const gapMarkets = markets.filter((m) => m.prediction.gap > 0);
@@ -60,7 +59,7 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
     const tierMarkets = gapMarkets.filter((m) => m.prediction.tier === tier);
     if (tierMarkets.length > 0) {
       const budget = tierMarkets.reduce((sum, m) => {
-        const b = m.prediction.budgets.find((b) => b.rate === 20);
+        const b = m.prediction.budgets.find((b) => b.rate === cptRates[0]);
         return sum + (b?.amount || 0);
       }, 0);
       if (budget > 0) {
@@ -75,7 +74,7 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={stagger}
@@ -100,107 +99,60 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
                   @ ${rate} CPT
                 </th>
               ))}
-              <th className="text-right py-3 px-4 text-text-muted uppercase text-xs tracking-wider font-semibold">
-                Req'd Velocity
-              </th>
-              <th className="text-right py-3 px-4 text-text-muted uppercase text-xs tracking-wider font-semibold">
-                Current Velocity
-              </th>
-              <th className="text-right py-3 px-4 text-text-muted uppercase text-xs tracking-wider font-semibold">
-                Velocity Gap
-              </th>
             </tr>
           </thead>
           <tbody>
             {gapMarkets.map((market) => (
-              <tr
-                key={`${market.city}-${market.showDate}`}
-                className={`border-b border-surface-200 hover:bg-surface-50/50 transition-colors ${tierBg(
-                  market.prediction.tier
-                )}`}
-              >
-                <td className="py-3 px-4">
-                  <div>
-                    <p className="font-semibold text-text-primary">{market.city}</p>
-                    <p className="text-xs text-text-muted">{market.venue}</p>
-                  </div>
+              <tr key={`${market.city}-${market.showDate}`} className="border-b border-surface-100 hover:bg-surface-50/40">
+                <td className={`py-3 px-4 font-body text-sm border ${tierBg(market.prediction.tier)}`}>
+                  <p className="font-semibold">{market.city}</p>
+                  <p className="text-xs text-text-muted">{market.country}</p>
                 </td>
-                <td className="text-right py-3 px-4 text-text-primary font-semibold">
-                  {formatNumber(market.prediction.gap)}
+                <td className={`py-3 px-4 text-right font-body border ${tierBg(market.prediction.tier)}`}>
+                  <p className="font-semibold">{formatNumber(market.prediction.gap)}</p>
+                  <p className="text-xs text-text-muted">{formatPct(market.prediction.gap / market.capacity)}</p>
                 </td>
-                {cptRates.map((rate) => {
-                  const budget = market.prediction.budgets.find((b) => b.rate === rate);
-                  return (
-                    <td key={rate} className="text-right py-3 px-4 text-text-primary">
-                      {formatCurrency(budget?.amount || 0)}
-                    </td>
-                  );
-                })}
-                <td className="text-right py-3 px-4 text-text-primary font-semibold">
-                  {formatNumber(market.prediction.requiredWeeklyVelocity)}/wk
-                </td>
-                <td className="text-right py-3 px-4 text-text-secondary">
-                  {formatNumber(market.recentWeeklyVelocity)}/wk
-                </td>
-                <td className="text-right py-3 px-4 text-tier-red font-semibold">
-                  {formatNumber(market.prediction.velocityGap)}/wk
-                </td>
+                {market.prediction.budgets.map((budget) => (
+                  <td key={budget.rate} className={`py-3 px-4 text-right font-body border ${tierBg(market.prediction.tier)}`}>
+                    <p className="font-semibold">{formatCurrency(budget.amount)}</p>
+                  </td>
+                ))}
               </tr>
             ))}
-            {/* Totals row */}
-            <tr className="border-t-2 border-accent bg-surface-100 font-semibold">
-              <td className="py-4 px-4 text-text-primary">TOTAL</td>
-              <td className="text-right py-4 px-4 text-text-primary">
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-accent">
+              <td className="py-3 px-4 font-heading font-bold text-text-primary">TOTAL</td>
+              <td className="py-3 px-4 text-right font-heading font-bold text-text-primary">
                 {formatNumber(totalGap)}
               </td>
               {budgetsByRate.map(({ rate, total }) => (
-                <td key={rate} className="text-right py-4 px-4 text-accent">
+                <td key={rate} className="py-3 px-4 text-right font-heading font-bold text-accent">
                   {formatCurrency(total)}
                 </td>
               ))}
-              <td className="text-right py-4 px-4" />
-              <td className="text-right py-4 px-4" />
-              <td className="text-right py-4 px-4" />
             </tr>
-          </tbody>
+          </tfoot>
         </table>
       </motion.div>
 
-      {/* Donut chart */}
+      {/* Budget pie chart */}
       {tierBudgets.length > 0 && (
-        <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col justify-center">
-            <h3 className="font-display text-lg font-bold text-text-primary mb-4">
-              Budget by Tier
-            </h3>
-            <div className="space-y-3">
-              {tierBudgets.map((tier) => (
-                <div key={tier.name} className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: tier.color }}
-                    />
-                    <span className="text-text-secondary">{tier.name}</span>
-                  </div>
-                  <span className="font-semibold text-text-primary">
-                    {formatCurrency(tier.value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-64">
+        <motion.div variants={fadeUp}>
+          <h3 className="font-heading text-lg font-bold text-text-primary mb-4">
+            Budget Breakdown by Tier (@ ${cptRates[0]} CPT)
+          </h3>
+          <div className="h-80 bg-surface-50/40 border border-surface-200 rounded-lg p-4 backdrop-blur-sm">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={tierBudgets}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                  outerRadius={80}
+                  fill="#8884d8"
                   dataKey="value"
                 >
                   {tierBudgets.map((entry, index) => (
@@ -208,14 +160,15 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => formatCurrency(value as number)}
                   contentStyle={{
                     backgroundColor: '#1A1A1A',
                     border: '1px solid #333333',
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: '#FAFAFA' }}
+                  formatter={(value) => formatCurrency(value as number)}
                 />
+                <Legend wrapperStyle={{ paddingTop: '16px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>

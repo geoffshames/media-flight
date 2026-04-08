@@ -22,11 +22,11 @@ interface PacingChartProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 export function PacingChart({ markets, benchmark }: PacingChartProps) {
-  
+
   const [visibleMarkets, setVisibleMarkets] = useState<Set<string>>(
     new Set(
       markets
@@ -69,8 +69,8 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
 
   const getColorForMarket = (city: string) => {
     const market = markets.find((m) => m.city === city);
-    if (!market) return '#B8B8C0';
-    return tierColors[market.prediction.tier] || '#B8B8C0';
+    if (!market) return '#71717A';
+    return tierColors[market.prediction.tier] || '#71717A';
   };
 
   const toggleMarket = (marketId: string) => {
@@ -85,7 +85,7 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={fadeUp}
@@ -121,14 +121,14 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
             <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
             <XAxis
               dataKey="date"
-              stroke="#B8B8C0"
+              stroke="#71717A"
               tick={{ fontSize: 12 }}
               tickFormatter={(date) => {
                 const d = new Date(date + 'T00:00:00');
                 return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
               }}
             />
-            <YAxis stroke="#B8B8C0" tick={{ fontSize: 12 }} domain={[0, 100]} />
+            <YAxis stroke="#71717A" tick={{ fontSize: 12 }} domain={[0, 100]} />
             <Tooltip
               contentStyle={{
                 backgroundColor: '#1A1A1A',

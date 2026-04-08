@@ -11,7 +11,7 @@ interface FlightHeroProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const stagger = {
@@ -68,7 +68,7 @@ export function FlightHero({ data }: FlightHeroProps) {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Main heading */}
         <motion.div variants={fadeUp} className="mb-4">
-          <h1 className="font-display text-5xl md:text-7xl font-bold text-text-primary leading-tight tracking-tight">
+          <h1 className="font-heading text-6xl md:text-8xl font-bold text-text-primary leading-tight tracking-tight">
             {data.artist}
           </h1>
         </motion.div>
@@ -156,7 +156,7 @@ export function FlightHero({ data }: FlightHeroProps) {
               <div className="w-3 h-3 rounded-full bg-tier-orange" />
               <span>
                 <span className="text-tier-orange font-semibold">{getTierCount('orange')}</span>{' '}
-                Need Push
+                Needs Push
               </span>
             </div>
           )}
@@ -187,7 +187,7 @@ function StatCard({ label, value, format, variants }: StatCardProps) {
       <p className="font-body text-xs sm:text-sm text-text-muted mb-2 uppercase tracking-wider">
         {label}
       </p>
-      <p className="font-display text-2xl sm:text-3xl font-bold text-text-primary">
+      <p className="font-heading text-2xl sm:text-3xl font-bold text-text-primary">
         <AnimatedNumber value={value} format={format} />
       </p>
     </motion.div>

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Market, BenchmarkData } from '@/lib/types/flight';
-import { formatNumber, formatPct, formatCurrency, tierBg, tierTextColor } from '@/lib/utils/formatters';
+import { formatNumber, formatPct, formatCurrency, tierBg, tierTextColor, getStatusLabel, getStatusBadge } from '@/lib/utils/formatters';
 
 import {
   BarChart,
@@ -22,11 +22,11 @@ interface MarketDeepDivesProps {
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
 };
 
 export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDivesProps) {
-  
+
   const [expandedMarkets, setExpandedMarkets] = useState<Set<string>>(
     new Set(
       markets
@@ -67,7 +67,7 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
 
   return (
     <motion.div
-      
+
       initial="hidden"
       animate="visible"
       variants={fadeUp}
@@ -138,18 +138,18 @@ function MarketDeepDiveCard({
       >
         <div className="flex justify-between items-start gap-4">
           <div>
-            <h3 className="font-display text-lg sm:text-xl font-bold text-text-primary">
+            <h3 className="font-heading text-lg sm:text-xl font-bold text-text-primary">
               {market.city}, {market.country}
             </h3>
             <p className="text-xs sm:text-sm text-text-muted font-body mt-1">{market.venue}</p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${tierBg(
+              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(
                 market.prediction.tier
               )}`}
             >
-              {market.prediction.tierLabel}
+              {getStatusLabel(market.prediction.tier)}
             </div>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -189,13 +189,13 @@ function MarketDeepDiveCard({
             className="border-t border-surface-200 overflow-hidden"
           >
             <div className="p-4 sm:p-6 space-y-6">
-              {/* Pacing note */}
+              {/* Status note */}
               {market.pacingNote && (
                 <div>
                   <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-2">
-                    Pacing Note
+                    Status
                   </p>
-                  <p className="font-body text-sm text-text-secondary">{market.pacingNote}</p>
+                  <p className="font-body text-sm text-text-secondary">{getStatusLabel(market.prediction.tier)}</p>
                 </div>
               )}
 
@@ -208,8 +208,8 @@ function MarketDeepDiveCard({
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={velocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
-                      <XAxis dataKey="name" stroke="#B8B8C0" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#B8B8C0" tick={{ fontSize: 11 }} />
+                      <XAxis dataKey="name" stroke="#71717A" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#71717A" tick={{ fontSize: 11 }} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#1A1A1A',
@@ -252,7 +252,7 @@ function MarketDeepDiveCard({
                   <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
                     Current %
                   </p>
-                  <p className={`font-display text-lg font-bold ${tierTextColor(market.prediction.tier)}`}>
+                  <p className={`font-heading text-lg font-bold ${tierTextColor(market.prediction.tier)}`}>
                     {formatPct(market.pctSold)}
                   </p>
                 </div>
@@ -260,7 +260,7 @@ function MarketDeepDiveCard({
                   <p className="font-body text-xs uppercase tracking-wider text-text-muted mb-1">
                     Predicted %
                   </p>
-                  <p className="font-display text-lg font-bold text-text-primary">
+                  <p className="font-heading text-lg font-bold text-text-primary">
                     {formatPct(market.prediction.blendedPredPct)}
                   </p>
                 </div>
