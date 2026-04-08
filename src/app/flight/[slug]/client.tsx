@@ -26,8 +26,7 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
   return (
     <motion.div
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-100px' }}
+      animate="visible"
       variants={sectionHeaderVariants}
       className="mb-8"
     >
