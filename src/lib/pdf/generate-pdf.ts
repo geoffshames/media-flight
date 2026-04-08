@@ -377,8 +377,16 @@ function drawSectionLabel(doc: jsPDF, label: string, x: number, y: number) {
 
 // ── Market Detail Page ──
 
+function shortTierLabel(tier: string): string {
+  if (tier.startsWith('green')) return 'Healthy';
+  if (tier === 'yellow') return 'Watch';
+  if (tier === 'orange') return 'Push';
+  if (tier === 'red') return 'Critical';
+  return tier;
+}
+
 function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
-  doc.addPage();
+  doc.addPage('a4', 'landscape');
   drawPageBg(doc);
   drawHeader(doc, plan);
   const w = doc.internal.pageSize.getWidth();
@@ -393,17 +401,19 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
   setColor(doc, TEXT_PRIMARY);
   doc.text(market.city.toUpperCase(), margin, y);
 
-  // ── Tier pill badge — compact, properly sized ──
+  // ── Tier pill badge — short label, positioned on same line but after the city ──
   const tc = tierColor(market.prediction.tier);
-  const tierText = market.prediction.tierLabel.toUpperCase();
+  const tierText = shortTierLabel(market.prediction.tier).toUpperCase();
+  // Measure city width at the heading font size
+  const cityW = doc.getTextWidth(market.city.toUpperCase());
   doc.setFontSize(7);
   const tierTextW = doc.getTextWidth(tierText);
-  const badgeX = margin + doc.getTextWidth(market.city.toUpperCase()) + 8;
   const badgeW = tierTextW + 10;
   const badgeH = 7;
+  const badgeX = margin + cityW + 8;
   const badgeY = y - 5.5;
 
-  // Badge background with tier color at 20% opacity — use a subtle fill
+  // Badge background
   setFill(doc, SURFACE_LIGHT);
   doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 3.5, 3.5, 'F');
   // Badge border in tier color
