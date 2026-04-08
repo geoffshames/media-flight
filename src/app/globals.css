@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'N27';
+  src: url('/brand/N27-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0A0A0A;
+  --text-primary: #FAFAFA;
+  --text-secondary: #E4E4E9;
+  --text-muted: #B8B8C0;
+  --accent: #FD3737;
+  --surface: #141414;
+  --surface-50: #1A1A1A;
+  --surface-100: #262626;
+  --surface-200: #333333;
+  --tier-green: #00E676;
+  --tier-yellow: #FFD600;
+  --tier-orange: #FF9100;
+  --tier-red: #FF1744;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Work Sans', sans-serif;
+}
+
+::selection {
+  background: rgba(253, 55, 55, 0.3);
+  color: #FAFAFA;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FD3737;
+}
