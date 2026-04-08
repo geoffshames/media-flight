@@ -27,7 +27,7 @@ const fadeUp = {
 // Muted line palette — no bright tier colors
 const LINE_COLORS = [
   '#FAFAFA',   // white
-  '#A1A1AA',   // gray
+  '#D4D4D8',   // gray
   '#FD3737',   // accent red
   '#FF8A80',   // soft coral
   '#FFAB91',   // peach

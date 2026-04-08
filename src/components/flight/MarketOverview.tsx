@@ -119,7 +119,14 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
             </h3>
             <p className="text-[13px] text-text-muted mt-0.5">{market.venue}</p>
           </div>
-          <span className="text-[11px] font-medium tracking-[0.08em] uppercase text-text-muted bg-surface-100 border border-surface-200 rounded px-2.5 py-1">
+          <span
+            className="text-[11px] font-semibold tracking-[0.08em] uppercase rounded-md px-2.5 py-1 border"
+            style={{
+              color: accentColor,
+              borderColor: `${accentColor}44`,
+              backgroundColor: `${accentColor}11`,
+            }}
+          >
             {getStatusLabel(market.prediction.tier)}
           </span>
         </div>
@@ -129,11 +136,11 @@ function MarketCard({ market, delay }: { market: Market; delay: number }) {
           <span>{formatDate(market.showDate)}</span>
           {market.country !== 'United Kingdom' && (
             <>
-              <span className="text-surface-200">·</span>
+              <span className="text-surface-300">·</span>
               <span>{market.country}</span>
             </>
           )}
-          <span className="text-surface-200">·</span>
+          <span className="text-surface-300">·</span>
           <span>{market.daysOut > 0 ? `${market.daysOut}d out` : 'Show day'}</span>
         </div>
 

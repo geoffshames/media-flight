@@ -70,14 +70,14 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
     >
       <button
         onClick={() => setShowGreen(!showGreen)}
-        className="px-4 py-2 rounded text-[13px] font-body tracking-wide bg-surface-100 text-text-muted hover:text-text-secondary hover:bg-surface-200 transition-colors border border-surface-200"
+        className="px-4 py-2 rounded-lg text-[13px] font-body tracking-wide bg-surface-100 text-text-muted hover:text-text-primary hover:bg-surface-200 transition-all border border-surface-200"
       >
         {showGreen ? 'Hide' : 'Show'} Green Markets
       </button>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <AnimatePresence mode="popLayout">
-          {visibleMarkets.map((market) => {
+          {visibleMarkets.map((market, idx) => {
             const marketId = `${market.city}-${market.showDate}`;
             const isExpanded = expandedMarkets.has(marketId);
             return (
@@ -87,6 +87,7 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
                 isExpanded={isExpanded}
                 onToggle={() => toggleMarket(marketId)}
                 cptRates={cptRates}
+                index={idx}
               />
             );
           })}
@@ -101,13 +102,16 @@ function MarketDeepDiveCard({
   isExpanded,
   onToggle,
   cptRates,
+  index,
 }: {
   market: Market;
   isExpanded: boolean;
   onToggle: () => void;
   cptRates: number[];
+  index: number;
 }) {
   const accentColor = tierAccentColor(market.prediction.tier);
+  const progressPct = Math.min(market.pctSold * 100, 100);
   const velocityData = [
     { name: 'Avg Weekly', value: market.avgWeeklyVelocity },
     { name: 'Recent Weekly', value: market.recentWeeklyVelocity },
@@ -117,53 +121,86 @@ function MarketDeepDiveCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative rounded-xl border border-surface-200 bg-surface-50/60 overflow-hidden backdrop-blur-sm"
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      whileHover={{ scale: 1.005, transition: { duration: 0.2 } }}
+      className="relative rounded-2xl border border-surface-200 bg-surface-50 overflow-hidden group"
     >
-      {/* Thin left accent */}
+      {/* Top gradient bar based on tier */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-[3px]"
-        style={{ backgroundColor: accentColor }}
+        className="h-1 w-full"
+        style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}44 70%, transparent)` }}
       />
 
-      {/* Header */}
+      {/* Header — always visible */}
       <button
         onClick={onToggle}
-        className="w-full text-left p-5 pl-6 hover:bg-surface-100/30 transition-colors focus:outline-none"
+        className="w-full text-left p-6 hover:bg-surface-100/40 transition-all focus:outline-none"
       >
-        <div className="flex justify-between items-start gap-4">
-          <div>
-            <h3 className="font-heading text-[17px] font-bold text-text-primary">
-              {market.city}, {market.country}
-            </h3>
-            <p className="text-[13px] text-text-muted font-body mt-0.5">{market.venue}</p>
+        <div className="flex items-start justify-between gap-6">
+          {/* Left: city + venue + meta */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="font-heading text-xl font-bold text-text-primary truncate">
+                {market.city}
+              </h3>
+              <span className="text-text-muted text-sm">·</span>
+              <span className="text-sm text-text-secondary font-body">{market.country}</span>
+            </div>
+            <p className="text-sm text-text-muted font-body">{market.venue}</p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <span className="text-[11px] font-medium tracking-[0.08em] uppercase text-text-muted bg-surface-100 border border-surface-200 rounded px-2.5 py-1">
+
+          {/* Right: sell pct + status */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="text-right">
+              <p className="font-heading text-2xl font-bold text-text-primary leading-none">
+                {formatPct(market.pctSold)}
+              </p>
+              <p className="text-[11px] text-text-muted font-body mt-0.5">sold</p>
+            </div>
+            <span
+              className="text-[11px] font-semibold tracking-[0.08em] uppercase rounded-md px-3 py-1.5 border"
+              style={{
+                color: accentColor,
+                borderColor: `${accentColor}44`,
+                backgroundColor: `${accentColor}11`,
+              }}
+            >
               {getStatusLabel(market.prediction.tier)}
             </span>
             <motion.div
               animate={{ rotate: isExpanded ? 180 : 0 }}
               transition={{ duration: 0.3 }}
-              className="text-text-muted text-[12px]"
+              className="text-text-muted text-sm"
             >
               ▼
             </motion.div>
           </div>
         </div>
 
-        <div className="mt-2.5 text-[13px] text-text-muted font-body flex items-center gap-2">
-          <span>{formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}</span>
-          <span className="text-surface-300">·</span>
-          <span className="text-text-secondary font-medium">{formatPct(market.pctSold)}</span>
-          {market.prediction.gap > 0 && (
-            <>
-              <span className="text-surface-300">·</span>
-              <span>Gap: {formatNumber(market.prediction.gap)}</span>
-            </>
-          )}
+        {/* Progress bar */}
+        <div className="mt-4 space-y-2">
+          <div className="flex justify-between items-baseline text-sm font-body">
+            <span className="text-text-secondary">
+              {formatNumber(market.ticketsSold)} / {formatNumber(market.capacity)}
+            </span>
+            {market.prediction.gap > 0 && (
+              <span className="text-text-muted">
+                Gap: <span className="text-text-primary font-medium">{formatNumber(market.prediction.gap)}</span>
+              </span>
+            )}
+          </div>
+          <div className="h-2 bg-surface-200 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 1.2, ease: 'easeOut', delay: index * 0.05 + 0.2 }}
+              className="h-full rounded-full"
+              style={{ backgroundColor: accentColor }}
+            />
+          </div>
         </div>
       </button>
 
@@ -174,64 +211,77 @@ function MarketDeepDiveCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="border-t border-surface-200 overflow-hidden"
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
           >
-            <div className="p-5 pl-6 space-y-6">
-              {/* Velocity chart */}
-              <div>
-                <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3">
-                  Velocity Analysis
-                </p>
-                <div className="h-36 border border-surface-200 rounded-lg p-2 bg-surface-100/30">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={velocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#222222" />
-                      <XAxis dataKey="name" stroke="#71717A" tick={{ fontSize: 11, fill: '#71717A' }} />
-                      <YAxis stroke="#71717A" tick={{ fontSize: 11, fill: '#71717A' }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#1A1A1A',
-                          border: '1px solid #222222',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                        }}
-                        labelStyle={{ color: '#FAFAFA' }}
-                      />
-                      <Bar dataKey="value" fill="#A1A1AA" radius={3} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            <div className="border-t border-surface-200 bg-surface-100/20">
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left: Velocity chart */}
+                <div>
+                  <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3 font-medium">
+                    Velocity Analysis
+                  </p>
+                  <div className="h-44 rounded-xl border border-surface-200 p-3 bg-surface-50">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={velocityData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+                        <XAxis dataKey="name" stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                        <YAxis stroke="#9CA3AF" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1A1A1A',
+                            border: '1px solid #2A2A2A',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                          }}
+                          labelStyle={{ color: '#FAFAFA' }}
+                        />
+                        <Bar dataKey="value" fill={accentColor} radius={4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
 
-              {/* Budget by rate */}
-              <div>
-                <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3">
-                  Budget Requirements
-                </p>
-                <div className="space-y-2">
-                  {market.prediction.budgets.map((budget) => (
-                    <div
-                      key={budget.rate}
-                      className="flex justify-between items-center p-3 border border-surface-200 rounded-lg bg-surface-100/30"
-                    >
-                      <span className="font-body text-[13px] text-text-muted">
-                        @ ${budget.rate} CPT
-                      </span>
-                      <span className="font-heading text-[15px] font-bold text-text-primary">
-                        {formatCurrency(budget.amount)}
-                      </span>
+                {/* Right: Budget + Predictions */}
+                <div className="space-y-6">
+                  {/* Budget by rate */}
+                  <div>
+                    <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3 font-medium">
+                      Budget Requirements
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {market.prediction.budgets.map((budget) => (
+                        <motion.div
+                          key={budget.rate}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="p-4 rounded-xl border border-surface-200 bg-surface-50/80"
+                        >
+                          <p className="font-body text-[11px] text-text-muted uppercase tracking-wider mb-1">
+                            @ ${budget.rate}/Ticket
+                          </p>
+                          <p className="font-heading text-xl font-bold text-text-primary">
+                            {formatCurrency(budget.amount)}
+                          </p>
+                        </motion.div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
 
-              {/* Prediction details */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <DetailStat label="Current" value={formatPct(market.pctSold)} />
-                <DetailStat label="Predicted" value={formatPct(market.prediction.blendedPredPct)} />
-                <DetailStat label="Confidence" value={market.prediction.confidence} />
-                <DetailStat label="Trend" value={market.velocityTrend.replace('_', ' ')} />
+                  {/* Prediction details */}
+                  <div>
+                    <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-3 font-medium">
+                      Prediction
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <DetailStat label="Current" value={formatPct(market.pctSold)} />
+                      <DetailStat label="Predicted" value={formatPct(market.prediction.blendedPredPct)} highlight />
+                      <DetailStat label="Confidence" value={market.prediction.confidence} />
+                      <DetailStat label="Trend" value={market.velocityTrend.replace('_', ' ')} />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -241,11 +291,11 @@ function MarketDeepDiveCard({
   );
 }
 
-function DetailStat({ label, value }: { label: string; value: string }) {
+function DetailStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div>
+    <div className="p-3 rounded-lg border border-surface-200 bg-surface-50/60">
       <p className="font-body text-[11px] uppercase tracking-[0.12em] text-text-muted mb-1">{label}</p>
-      <p className="font-body text-[14px] font-medium text-text-secondary capitalize">{value}</p>
+      <p className={`font-heading text-[15px] font-bold capitalize ${highlight ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }

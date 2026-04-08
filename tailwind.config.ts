@@ -23,8 +23,8 @@ const config: Config = {
         },
         text: {
           primary: '#FAFAFA',
-          secondary: '#A1A1AA',
-          muted: '#71717A',
+          secondary: '#D4D4D8',
+          muted: '#9CA3AF',
         },
         tier: {
           green: '#00E676',

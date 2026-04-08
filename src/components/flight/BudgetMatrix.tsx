@@ -56,7 +56,7 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
                   key={rate}
                   className="text-right py-3 px-4 text-text-muted uppercase text-[11px] tracking-[0.12em] font-medium"
                 >
-                  @ ${rate} CPT
+                  @ ${rate}/Ticket
                 </th>
               ))}
               <th className="text-right py-3 px-4 text-text-muted uppercase text-[11px] tracking-[0.12em] font-medium">
