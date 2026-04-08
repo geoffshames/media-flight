@@ -9,6 +9,7 @@ export const miguelCaosUkEu: FlightPlan = {
   generatedDate: '2026-04-07',
   accentColor: '#FF1744',
   password: 'caos2026',
+  alertRecipients: ['geoff@crowdcontroldigital.com'],
   summary: {
     totalMarkets: 14,
     totalCapacity: 31263,

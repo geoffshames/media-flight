@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFlightData } from '@/lib/context/FlightDataContext';
 import { recalculateFromUpload } from '@/lib/engine/recalculate';
+import { buildAlertPayload } from '@/lib/engine/alerts';
 import { formatPct, formatCurrency } from '@/lib/utils/formatters';
 import { tierAccentColor } from '@/lib/utils/formatters';
 
@@ -14,6 +15,8 @@ export function UploadWidget() {
   const [processing, setProcessing] = useState<ProcessingState>('idle');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [snapshotSaved, setSnapshotSaved] = useState(false);
+  const [alertStatus, setAlertStatus] = useState<'idle' | 'sending' | 'sent' | 'none' | 'error'>('idle');
+  const [alertCount, setAlertCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingSnapshot = useRef<ReturnType<typeof recalculateFromUpload>['snapshot'] | null>(null);
 
@@ -46,6 +49,33 @@ export function UploadWidget() {
       pendingSnapshot.current = result.snapshot;
       applyUpdate(result.updatedPlan, result.diff);
       setProcessing('done');
+
+      // Check for alerts and send if recipients configured
+      if (originalData.alertRecipients?.length) {
+        const alertPayload = buildAlertPayload(
+          originalData,
+          result.updatedPlan,
+          result.diff,
+          originalData.alertRecipients,
+          typeof window !== 'undefined' ? window.location.origin : 'https://flight.crowdcontroldigital.com',
+        );
+        if (alertPayload) {
+          setAlertStatus('sending');
+          setAlertCount(alertPayload.alerts.length);
+          try {
+            const res = await fetch('/api/alerts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(alertPayload),
+            });
+            setAlertStatus(res.ok ? 'sent' : 'error');
+          } catch {
+            setAlertStatus('error');
+          }
+        } else {
+          setAlertStatus('none');
+        }
+      }
     } catch (err) {
       console.error('Parse error:', err);
       setWarnings(['Failed to parse file. Please check the format and try again.']);
@@ -76,6 +106,8 @@ export function UploadWidget() {
     setProcessing('idle');
     setWarnings([]);
     setSnapshotSaved(false);
+    setAlertStatus('idle');
+    setAlertCount(0);
     pendingSnapshot.current = null;
   }, [revert]);
 
@@ -234,6 +266,34 @@ export function UploadWidget() {
                       </span>
                     </div>
                   ))}
+
+                  {/* Alert status */}
+                  {alertStatus === 'sending' && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
+                      <div className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
+                      <span className="text-text-muted text-xs">Sending alerts...</span>
+                    </div>
+                  )}
+                  {alertStatus === 'sent' && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
+                      <span className="text-xs">📧</span>
+                      <span className="text-text-secondary text-xs">
+                        {alertCount} alert{alertCount > 1 ? 's' : ''} sent to {originalData.alertRecipients?.length} recipient{(originalData.alertRecipients?.length ?? 0) > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
+                  {alertStatus === 'none' && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-tier-green/5 border border-tier-green/10">
+                      <span className="text-xs">✓</span>
+                      <span className="text-tier-green/80 text-xs">No alerts triggered — all markets healthy</span>
+                    </div>
+                  )}
+                  {alertStatus === 'error' && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-tier-red/5 border border-tier-red/10">
+                      <span className="text-xs">⚠</span>
+                      <span className="text-tier-red/80 text-xs">Alert email failed to send</span>
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2 border-t border-surface-200">

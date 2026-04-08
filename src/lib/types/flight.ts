@@ -7,6 +7,7 @@ export interface FlightPlan {
   generatedDate: string;
   accentColor?: string;
   password?: string;                 // Simple access password for this flight plan
+  alertRecipients?: string[];        // Email addresses that receive alerts on data upload
   summary: FlightSummary;
   cptRates: number[];
   markets: Market[];
