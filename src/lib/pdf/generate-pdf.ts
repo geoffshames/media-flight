@@ -428,9 +428,10 @@ function drawMarketPage(doc: jsPDF, plan: FlightPlan, market: Market) {
   setDraw(doc, tc);
   doc.setLineWidth(0.4);
   doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 3.5, 3.5, 'S');
-  // Badge text — centered horizontally and vertically
+  // Badge text — manually centered (align:'center' unreliable with custom fonts)
   setColor(doc, tc);
-  doc.text(tierText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1.5, { align: 'center' });
+  const tierTextActualW = doc.getTextWidth(tierText);
+  doc.text(tierText, badgeX + (badgeW - tierTextActualW) / 2, badgeY + badgeH / 2 + 1.5);
 
   y += 7;
 
