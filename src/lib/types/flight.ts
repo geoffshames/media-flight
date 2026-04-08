@@ -101,3 +101,129 @@ export interface MethodologyInfo {
   snapshotCount: number;
   dateOfAnalysis: string;
 }
+
+// ── Prediction Snapshots ──
+
+export interface PredictionSnapshot {
+  id: string;
+  flightSlug: string;
+  timestamp: string;
+  source: 'skill_run' | 'upload_widget';
+  sourceFile?: string;
+  markets: MarketSnapshot[];
+  modelParams: {
+    velocityWeight: number;
+    multiplierWeight: number;
+    surgeMultiplier: number;
+    calibrationApplied: boolean;
+  };
+}
+
+export interface MarketSnapshot {
+  city: string;
+  showDate: string;
+  daysOut: number;
+  ticketsSold: number;
+  pctSold: number;
+  predictedFinalPct: number;
+  predictedFinalSold: number;
+  tier: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+// ── Upload Widget Types ──
+
+export interface DiffSummary {
+  filename: string;
+  timestamp: string;
+  marketsUpdated: number;
+  marketsTotal: number;
+  biggestMovers: {
+    city: string;
+    previousPct: number;
+    newPct: number;
+    deltaPct: number;
+  }[];
+  tierChanges: {
+    city: string;
+    previousTier: string;
+    newTier: string;
+  }[];
+  budgetChange: {
+    rate: number;
+    previousTotal: number;
+    newTotal: number;
+    delta: number;
+  }[];
+  overallSellThroughChange: number;
+}
+
+export interface ParsedMarketUpdate {
+  city: string;
+  showDate?: string;
+  ticketsSold: number;
+  capacity?: number;
+}
+
+// ── Accuracy Tracking ──
+
+export interface AccuracyRecord {
+  id: string;
+  flightSlug: string;
+  artist: string;
+  tourName: string;
+  legName: string;
+  checkDate: string;
+  snapshotDate: string;
+  source: 'weekly_wrap' | 'post_show' | 'skill_rerun';
+  marketsChecked: number;
+  metrics: AccuracyMetrics;
+  marketDetails: MarketAccuracyDetail[];
+  calibrationApplied: boolean;
+}
+
+export interface AccuracyMetrics {
+  mape: number;
+  bias: number;
+  tierAccuracy: number;
+  directionAccuracy: number;
+}
+
+export interface MarketAccuracyDetail {
+  city: string;
+  showDate: string;
+  daysOutAtPrediction: number;
+  predictedPct: number;
+  actualPct: number;
+  error: number;
+  tierPredicted: string;
+  tierActual: string;
+  tierCorrect: boolean;
+}
+
+// ── Calibration ──
+
+export interface CalibrationData {
+  lastUpdated: string;
+  sampleSize: number;
+  biasCorrections: {
+    below50pct: number;
+    '50to75pct': number;
+    above75pct: number;
+  };
+  weights: {
+    velocityWeight: number;
+    multiplierWeight: number;
+  };
+  surgeMultiplier: number;
+  notes: string;
+  history: CalibrationChange[];
+}
+
+export interface CalibrationChange {
+  date: string;
+  trigger: string;
+  mapeBeforeCalibration: number;
+  mapeAfterCalibration: number;
+  changes: string;
+}

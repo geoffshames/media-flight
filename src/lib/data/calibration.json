@@ -1,0 +1,16 @@
+{
+  "lastUpdated": "2026-04-08",
+  "sampleSize": 0,
+  "biasCorrections": {
+    "below50pct": 0,
+    "50to75pct": 0,
+    "above75pct": 0
+  },
+  "weights": {
+    "velocityWeight": 0.5,
+    "multiplierWeight": 0.5
+  },
+  "surgeMultiplier": 1.5,
+  "notes": "Default model parameters — no calibration data yet. Weights will adjust as accuracy data accumulates.",
+  "history": []
+}

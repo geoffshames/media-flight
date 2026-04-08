@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { FlightPlan } from '@/lib/types/flight';
+import { FlightDataProvider, useFlightData } from '@/lib/context/FlightDataContext';
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 import { FlightHero } from '@/components/flight/FlightHero';
@@ -12,6 +13,7 @@ import { Methodology } from '@/components/flight/Methodology';
 import { PredictionModel } from '@/components/flight/PredictionModel';
 import { SectionDivider } from '@/components/common/SectionDivider';
 import { TourMap } from '@/components/flight/TourMap';
+import { UploadWidget } from '@/components/flight/UploadWidget';
 
 interface FlightClientProps {
   flight: FlightPlan;
@@ -45,9 +47,20 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
 
 export function FlightClient({ flight }: FlightClientProps) {
   return (
+    <FlightDataProvider initialData={flight}>
+      <FlightClientInner />
+    </FlightDataProvider>
+  );
+}
+
+function FlightClientInner() {
+  const { data: flight, isUpdated } = useFlightData();
+
+  return (
     <>
       <Navigation />
-      <main className="w-full bg-surface min-h-screen">
+      <UploadWidget />
+      <main className={`w-full bg-surface min-h-screen ${isUpdated ? 'pt-[36px]' : ''}`}>
         {/* Hero section */}
         <section className="w-full">
           <FlightHero data={flight} />
@@ -125,3 +138,4 @@ export function FlightClient({ flight }: FlightClientProps) {
     </>
   );
 }
+
