@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BenchmarkData } from '@/lib/types/flight';
 import { formatPct, formatNumber } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 
 interface BenchmarkComparisonProps {
   benchmark: BenchmarkData;
@@ -23,14 +23,14 @@ const stagger = {
 };
 
 export function BenchmarkComparison({ benchmark }: BenchmarkComparisonProps) {
-  const { ref, inView } = useInView();
+  
   const [expandedShow, setExpandedShow] = useState<string | null>(null);
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="space-y-8"
     >

@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
 import { formatCurrency, formatNumber, formatPct, tierBg } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 import {
   PieChart,
   Pie,
@@ -31,7 +31,7 @@ const stagger = {
 };
 
 export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
-  const { ref, inView } = useInView();
+  
 
   // Only markets with gaps
   const gapMarkets = markets.filter((m) => m.prediction.gap > 0);
@@ -75,9 +75,9 @@ export function BudgetMatrix({ markets, cptRates }: BudgetMatrixProps) {
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="space-y-6"
     >

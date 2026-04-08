@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { MethodologyInfo } from '@/lib/types/flight';
 import { formatDate } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 
 interface MethodologyProps {
   methodology: MethodologyInfo;
@@ -22,13 +22,13 @@ const stagger = {
 };
 
 export function Methodology({ methodology }: MethodologyProps) {
-  const { ref, inView } = useInView();
+  
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="space-y-6 max-w-4xl"
     >

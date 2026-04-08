@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { Market, BenchmarkData } from '@/lib/types/flight';
-import { useInView } from '@/hooks/useInView';
+
 
 interface PacingChartProps {
   markets: Market[];
@@ -26,7 +26,7 @@ const fadeUp = {
 };
 
 export function PacingChart({ markets, benchmark }: PacingChartProps) {
-  const { ref, inView } = useInView();
+  
   const [visibleMarkets, setVisibleMarkets] = useState<Set<string>>(
     new Set(
       markets
@@ -85,9 +85,9 @@ export function PacingChart({ markets, benchmark }: PacingChartProps) {
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={fadeUp}
       className="space-y-6"
     >

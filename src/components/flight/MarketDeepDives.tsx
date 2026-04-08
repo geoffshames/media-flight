@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Market, BenchmarkData } from '@/lib/types/flight';
 import { formatNumber, formatPct, formatCurrency, tierBg, tierTextColor } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 import {
   BarChart,
   Bar,
@@ -26,7 +26,7 @@ const fadeUp = {
 };
 
 export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDivesProps) {
-  const { ref, inView } = useInView();
+  
   const [expandedMarkets, setExpandedMarkets] = useState<Set<string>>(
     new Set(
       markets
@@ -67,9 +67,9 @@ export function MarketDeepDives({ markets, cptRates, benchmark }: MarketDeepDive
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={fadeUp}
       className="space-y-4"
     >

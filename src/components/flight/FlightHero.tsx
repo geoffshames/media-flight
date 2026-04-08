@@ -108,8 +108,8 @@ export function FlightHero({ data }: FlightHeroProps) {
           />
           <StatCard
             label="Sell-Through %"
-            value={data.summary.avgSellThrough}
-            format={formatPct}
+            value={Math.round(data.summary.avgSellThrough * 1000) / 10}
+            format={(n) => `${n.toFixed(1)}%`}
             variants={fadeUp}
           />
           <StatCard
@@ -119,9 +119,9 @@ export function FlightHero({ data }: FlightHeroProps) {
             variants={fadeUp}
           />
           <StatCard
-            label="Recommended Budget (@ $20 CPT)"
+            label={`Recommended Budget (@ $${data.cptRates[0]} CPT)`}
             value={
-              data.summary.budgetRecommendations.find((b) => b.rate === 20)?.totalBudget || 0
+              data.summary.budgetRecommendations[0]?.totalBudget || 0
             }
             format={formatCurrency}
             variants={fadeUp}

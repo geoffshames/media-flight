@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
 import { formatPct } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 
 interface PredictionModelProps {
   markets: Market[];
@@ -22,7 +22,7 @@ const stagger = {
 };
 
 export function PredictionModel({ markets }: PredictionModelProps) {
-  const { ref, inView } = useInView();
+  
 
   // Filter to non-green markets
   const riskMarkets = markets.filter(
@@ -57,9 +57,9 @@ export function PredictionModel({ markets }: PredictionModelProps) {
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="space-y-6"
     >

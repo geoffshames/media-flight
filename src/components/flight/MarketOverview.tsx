@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Market } from '@/lib/types/flight';
 import { formatDate, formatPct, formatNumber, tierBg, tierTextColor } from '@/lib/utils/formatters';
-import { useInView } from '@/hooks/useInView';
+
 import { GlassCard } from '@/components/common/GlassCard';
 
 interface MarketOverviewProps {
@@ -26,7 +26,7 @@ const stagger = {
 };
 
 export function MarketOverview({ markets }: MarketOverviewProps) {
-  const { ref, inView } = useInView();
+  
   const [sortBy, setSortBy] = useState<SortBy>('date');
 
   const getTierOrder = (tier: string) => {
@@ -57,9 +57,9 @@ export function MarketOverview({ markets }: MarketOverviewProps) {
 
   return (
     <motion.div
-      ref={ref}
+      
       initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
+      animate="visible"
       variants={stagger}
       className="space-y-6"
     >
